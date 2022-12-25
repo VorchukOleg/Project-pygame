@@ -4,10 +4,10 @@ import pygame
 
 pygame.init()
 pygame.font.init()
-SIZE = WIDTH, HEIGHT = 900, 900screen = pygame.display.set_mode(SIZE)
+SIZE = WIDTH, HEIGHT = 900, 900
+screen = pygame.display.set_mode(SIZE)
 pygame.display.set_caption('Bubble shooter')
 clock = pygame.time.Clock()
-
 FPS = 50
 
 
@@ -42,6 +42,7 @@ def game():
         screen.fill((r, g, b))
         pygame.display.flip()
         clock.tick(FPS)
+
 
 start_screen()
 game()
