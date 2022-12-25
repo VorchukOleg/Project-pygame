@@ -1,9 +1,0 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-Kirill Komov Dmitrievich
-=======
-Zelenov Igor Aleksandrovich
->>>>>>> origin/feature/listIgor
-=======
-Vorchuk Oleg Sergeevich
->>>>>>> origin/feature/listOleg
