@@ -97,7 +97,7 @@ def game():
     r, g, b = 0, 0, 0
     for i in range(10):
         for j in range(10):
-            Bubble((275 + i * 35, 275 + j * 35))
+            Bubble((300 + i * 30, 300 + j * 30))
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
