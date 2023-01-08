@@ -12,7 +12,7 @@ pygame.display.set_caption('Bubble shooter')
 clock = pygame.time.Clock()
 FPS = 50
 screen_rect = (0, 0, WIDTH, HEIGHT)
-GRAVITY = 0, 2
+GRAVITY = 0.2
 
 
 def load_image(name, colorkey=None):
