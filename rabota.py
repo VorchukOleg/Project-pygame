@@ -64,7 +64,7 @@ def create_particles(position):
 class Bubble(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites)
-        self.image = pygame.transform.scale(load_image('bubble.png'), (30, 30))
+        self.image = pygame.transform.scale(load_image(random.choice(['bluepysur.png', 'redpysur.png', 'greenpysur.png'])), (30, 30))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos
 
