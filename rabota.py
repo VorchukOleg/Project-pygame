@@ -12,7 +12,7 @@ pygame.display.set_caption('Bubble shooter')
 clock = pygame.time.Clock()
 FPS = 50
 screen_rect = (0, 0, WIDTH, HEIGHT)
-GRAVITY = 0,2
+GRAVITY = 0, 2
 
 
 def load_image(name, colorkey=None):
@@ -58,7 +58,8 @@ def create_particles(position):
     particle_count = 20
     numbers = range(-5, 6)
     for _ in range(particle_count):
-        Particle(position, random.choice(numbers), random.choice(numbers)
+        Particle(position, random.choice(numbers), random.choice(numbers))
+
 
 class Bubble(pygame.sprite.Sprite):
     def __init__(self, pos):
@@ -71,6 +72,7 @@ class Bubble(pygame.sprite.Sprite):
         if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos):
             self.kill()
+
 
 def start_screen():
     font = pygame.font.SysFont('impact', 60)
@@ -87,7 +89,6 @@ def start_screen():
         screen.blit(text, text_coords)
         pygame.display.flip()
         clock.tick(FPS)
-
 
 
 def game():
