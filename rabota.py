@@ -92,6 +92,60 @@ def start_screen():
         clock.tick(FPS)
 
 
+class Gun(pygame.sprite.Sprite):
+    def blitRotate(surf, image, pos, originPos, angle):
+
+        image_rect = image.get_rect(topleft=(pos[0] - originPos[0], pos[1] - originPos[1]))
+        offset_center_to_pivot = pygame.math.Vector2(pos) - image_rect.center
+
+        rotated_offset = offset_center_to_pivot.rotate(-angle)
+
+        rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
+
+        rotated_image = pygame.transform.rotate(image, angle)
+        rotated_image_rect = rotated_image.get_rect(center=rotated_image_center)
+
+        surf.blit(rotated_image, rotated_image_rect)
+
+
+
+    def blitRotate2(surf, image, topleft, angle):
+        rotated_image = pygame.transform.rotate(image, angle)
+        new_rect = rotated_image.get_rect(center=image.get_rect(topleft=topleft).center)
+
+        surf.blit(rotated_image, new_rect.topleft)
+        pygame.draw.rect(surf, (255, 0, 0), new_rect, 2)
+
+
+    try:
+        image = pygame.transform.scale(load_image(random.choice(
+            ['blue.png', 'red.png', 'green.png'])), (70, 70))
+    except:
+        text = pygame.font.SysFont('Times New Roman', 50).render('image', False, (255, 255, 0))
+        image = pygame.Surface((text.get_width() + 1, text.get_height() + 1))
+        pygame.draw.rect(image, (0, 0, 255), (1, 1, *text.get_size()))
+        image.blit(text, (1, 1))
+    w, h = image.get_size()
+
+    angle = 0
+    done = False
+    while not done:
+        clock.tick(50)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+
+        pos = (screen.get_width() / 2, screen.get_height() / 2)
+
+        screen.fill(0)
+        blitRotate(screen, image, pos, (w / 2, h / 2), angle)
+
+        angle += 2
+
+
+        pygame.display.flip()
+
+
 def game():
     running = True
     r, g, b = 0, 0, 0
