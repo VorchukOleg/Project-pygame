@@ -5,7 +5,7 @@ import sys
 
 pygame.init()
 pygame.font.init()
-SIZE = WIDTH, HEIGHT = 900, 900
+SIZE = WIDTH, HEIGHT = 1400, 610
 screen = pygame.display.set_mode(SIZE)
 all_sprites = pygame.sprite.Group()
 pygame.display.set_caption('Bubble shooter')
@@ -65,7 +65,7 @@ class Bubble(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__(all_sprites)
         self.image = pygame.transform.scale(load_image(random.choice(
-            ['bluebubble.png', 'redbubble.png', 'greenbubble.png'])), (30, 30))
+            ['bluebubble.png', 'redbubble.png', 'greenbubble.png'])), (70, 70))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos
 
@@ -78,7 +78,7 @@ class Bubble(pygame.sprite.Sprite):
 def start_screen():
     font = pygame.font.SysFont('impact', 60)
     text = font.render('Bubble shooter', False, 'white')
-    text_coords = (275, 200)
+    text_coords = (500, 100)
     running = True
     while running:
         for event in pygame.event.get():
@@ -97,7 +97,7 @@ def game():
     r, g, b = 0, 0, 0
     for i in range(10):
         for j in range(10):
-            Bubble((300 + i * 30, 300 + j * 30))
+            Bubble((400 + i * 60, 0 + j * 60))
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
