@@ -92,58 +92,76 @@ def start_screen():
         clock.tick(FPS)
 
 
+# class Gun(pygame.sprite.Sprite):
+#     def blitRotate(self, image, pos, origin_pos, angle, surface):
+#         self.surface = surface
+#
+#         image_rect = image.get_rect(topleft=(pos[0] - origin_pos[0], pos[1] - origin_pos[1]))
+#         offset_center_to_pivot = pygame.math.Vector2(pos) - image_rect.center
+#
+#         rotated_offset = offset_center_to_pivot.rotate(-angle)
+#
+#         rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
+#
+#         rotated_image = pygame.transform.rotate(image, angle)
+#         rotated_image_rect = rotated_image.get_rect(center=rotated_image_center)
+#
+#         self.surface.blit(rotated_image, rotated_image_rect)
+#
+#     def blitRotate2(self, image, topleft, angle):
+#         rotated_image = pygame.transform.rotate(image, angle)
+#         new_rect = rotated_image.get_rect(center=image.get_rect(topleft=topleft).center)
+#
+#         self.surface.blit(rotated_image, new_rect.topleft)
+#         pygame.draw.rect(self.surface, (255, 0, 0), new_rect, 2)
+#
+#     try:
+#         image = pygame.transform.scale(load_image(random.choice(
+#             ['blue.png', 'red.png', 'green.png'])), (70, 70))
+#     except Exception:
+#         text = pygame.font.SysFont('Times New Roman', 50).render('image', False, (255, 255, 0))
+#         image = pygame.Surface((text.get_width() + 1, text.get_height() + 1))
+#         pygame.draw.rect(image, (0, 0, 255), (1, 1, *text.get_size()))
+#         image.blit(text, (1, 1))
+#     w, h = image.get_size()
+#
+#     angle = 0
+#     done = False
+#     while not done:
+#         clock.tick(50)
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 done = True
+#
+#         pos = (screen.get_width() / 2, screen.get_height() / 2)
+#
+#         screen.fill(0)
+#         blitRotate(screen, image, pos, (w / 2, h / 2), angle)
+#
+#         angle += 2
+#
+#         pygame.display.flip()
+
+
 class Gun(pygame.sprite.Sprite):
-    def blitRotate(surf, image, pos, originPos, angle):
-
-        image_rect = image.get_rect(topleft=(pos[0] - originPos[0], pos[1] - originPos[1]))
-        offset_center_to_pivot = pygame.math.Vector2(pos) - image_rect.center
-
-        rotated_offset = offset_center_to_pivot.rotate(-angle)
-
-        rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
-
-        rotated_image = pygame.transform.rotate(image, angle)
-        rotated_image_rect = rotated_image.get_rect(center=rotated_image_center)
-
-        surf.blit(rotated_image, rotated_image_rect)
-
-
-
-    def blitRotate2(surf, image, topleft, angle):
-        rotated_image = pygame.transform.rotate(image, angle)
-        new_rect = rotated_image.get_rect(center=image.get_rect(topleft=topleft).center)
-
-        surf.blit(rotated_image, new_rect.topleft)
-        pygame.draw.rect(surf, (255, 0, 0), new_rect, 2)
-
-
-    try:
-        image = pygame.transform.scale(load_image(random.choice(
+    def __init__(self, pos, rotate):
+        super().__init__(all_sprites)
+        self.image = pygame.transform.scale(load_image(random.choice(
             ['blue.png', 'red.png', 'green.png'])), (70, 70))
-    except:
-        text = pygame.font.SysFont('Times New Roman', 50).render('image', False, (255, 255, 0))
-        image = pygame.Surface((text.get_width() + 1, text.get_height() + 1))
-        pygame.draw.rect(image, (0, 0, 255), (1, 1, *text.get_size()))
-        image.blit(text, (1, 1))
-    w, h = image.get_size()
+        self.origin = self.image
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = pos
+        self.rotating = rotate
+        self.angle = 0
 
-    angle = 0
-    done = False
-    while not done:
-        clock.tick(50)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
+    def update(self):
+        if self.rotating:
+            self.angle = (self.angle - 1) % 360
+            self.rotate()
 
-        pos = (screen.get_width() / 2, screen.get_height() / 2)
-
-        screen.fill(0)
-        blitRotate(screen, image, pos, (w / 2, h / 2), angle)
-
-        angle += 2
-
-
-        pygame.display.flip()
+    def rotate(self):
+        self.image = pygame.transform.rotate(self.origin, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
 
 
 def game():
@@ -152,11 +170,14 @@ def game():
     for i in range(10):
         for j in range(10):
             Bubble((400 + i * 60, 0 + j * 60))
+    gun1 = Gun((30, 300), True)
+    gun2 = Gun((1200, 300), False)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
+                gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
                 r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
                 create_particles(pygame.mouse.get_pos())
                 for bubble in all_sprites:
