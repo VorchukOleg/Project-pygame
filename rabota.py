@@ -156,7 +156,7 @@ class Gun(pygame.sprite.Sprite):
 
     def update(self):
         if self.rotating:
-            self.angle = (self.angle - 1) % 360
+            self.angle = (self.angle + 3) % 360
             self.rotate()
 
     def rotate(self):
