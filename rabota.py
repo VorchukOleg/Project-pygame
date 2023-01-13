@@ -324,6 +324,5 @@ class Border(pygame.sprite.Sprite):
         pygame.quit()
 
 
-all_content()
 start_screen()
 game()
