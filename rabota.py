@@ -1,13 +1,21 @@
 import random
 import os
+from math import cos, sin, radians
+
 import pygame
 import sys
+# from ctypes import windll
+# import win32con
+
+# import win32gui
 
 pygame.init()
 pygame.font.init()
 SIZE = WIDTH, HEIGHT = 900, 900
 screen = pygame.display.set_mode(SIZE)
 all_sprites = pygame.sprite.Group()
+vertical_borders = pygame.sprite.Group()
+horizontal_borders = pygame.sprite.Group()
 pygame.display.set_caption('Bubble shooter')
 clock = pygame.time.Clock()
 FPS = 50
@@ -72,47 +80,6 @@ class Bubble(pygame.sprite.Sprite):
                 self.rect.collidepoint(args[0].pos):
             self.kill()
 
-def start_screen():
-    font = pygame.font.SysFont('impact', 60)
-    text = font.render('Bubble shooter', False, 'white')
-    text_coords = (275, 200)
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                running = False
-                screen.fill('black')
-        screen.blit(text, text_coords)
-        pygame.display.flip()
-        clock.tick(FPS)
-
-
-
-def game():
-    running = True
-    r, g, b = 0, 0, 0
-    for i in range(10):
-        for j in range(10):
-            Bubble((275 + i * 35, 275 + j * 35))
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
-                create_particles(pygame.mouse.get_pos())
-                for bubble in all_sprites:
-                    if bubble.__class__ == Bubble:
-                        bubble.update(event)
-        all_sprites.update()
-        screen.fill((r, g, b))
-        all_sprites.draw(screen)
-        pygame.display.flip()
-        clock.tick(FPS)
-    pygame.quit()
-
 
 class Button:
     def __init__(self):
@@ -151,77 +118,43 @@ class Button:
             if self.y <= pos[1] <= self.y + self.height:
                 self.was_clicked = True
 
-    def start_screen():
-        text = pygame.font.SysFont('impact', 60).render('Bubble Shooter', False, (255, 255, 255))
-        btn = Button()
-        btn.set_text('Начать')
-        btn.set_font('impact')
-        btn.set_rect(350, 600, 200, 80)
-        btn.set_size(60)
-        exit_btn = Button()
-        exit_btn.set_text('Выйти')
-        exit_btn.set_font('impact')
-        exit_btn.set_rect(350, 700, 200, 80)
-        exit_btn.set_size(60)
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    btn.clicked(event.pos)
-                    if btn.was_clicked:
-                        pygame.event.post(pygame.event.Event(pygame.QUIT))
-                    exit_btn.clicked(event.pos)
-                    if exit_btn.was_clicked:
-                        pygame.event.post(pygame.event.Event(pygame.QUIT))
-            screen.blit(text, (260, 380))
-            btn.render()
-            exit_btn.render()
-            pygame.display.flip()
-            clock.tick(FPS)
-        return btn.was_clicked
+
+def start_screen():
+    text = pygame.font.SysFont('impact', 60).render('Bubble Shooter', False, (255, 255, 255))
+    btn = Button()
+    btn.set_text('Начать')
+    btn.set_font('impact')
+    btn.set_rect(350, 600, 200, 80)
+    btn.set_size(60)
+    exit_btn = Button()
+    exit_btn.set_text('Выйти')
+    exit_btn.set_font('impact')
+    exit_btn.set_rect(350, 700, 200, 80)
+    exit_btn.set_size(60)
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                btn.clicked(event.pos)
+                if btn.was_clicked:
+                    pygame.event.post(pygame.event.Event(pygame.QUIT))
+                exit_btn.clicked(event.pos)
+                if exit_btn.was_clicked:
+                    pygame.event.post(pygame.event.Event(pygame.QUIT))
+        screen.blit(text, (260, 380))
+        btn.render()
+        exit_btn.render()
+        pygame.display.flip()
+        clock.tick(FPS)
+    return btn.was_clicked
 
 
-    def all_content():
-        if start_screen():
-            game()
-        pygame.quit()
-
-
-    def game():
-        running = True
-        r, g, b = 0, 0, 0
-        screen = pygame.display.set_mode(SIZE)
-        # hwnd = pygame.display.get_wm_info()['window']
-        for i in range(10):
-            for j in range(10):
-                Bubble((275 + i * 35, 275 + j * 35))
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-            #     screen = pygame.display.set_mode((1920, 1080))
-            #     # hwnd = win32gui.GetForegroundWindow()
-            #     # win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 600, 300, 0, 0, win32con.SWP_NOSIZE)
-            #     # SetWindowPos = windll.user32.SetWindowPos
-            #     # SetWindowPos(hwnd, -1, 0, 0, 0, 0, 2 | 1)
-            # if event.type == pygame.WINDOWMINIMIZED:
-            #     SetActiveWindow = windll.user32.SetActiveWindow
-            #     SetActiveWindow(hwnd)
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    r, g, b = random.randint(0, 255), random.randint(0, 255), \
-                              random.randint(0, 255)
-                    create_particles(pygame.mouse.get_pos())
-                    for bubble in all_sprites:
-                        if bubble.__class__ == Bubble:
-                            bubble.update(event)
-            all_sprites.update()
-            screen.fill((r, g, b))
-            all_sprites.draw(screen)
-            pygame.display.flip()
-            clock.tick(FPS)
-        pygame.quit()
+def all_content():
+    if start_screen():
+        game()
+    pygame.quit()
 
 
 class Gun(pygame.sprite.Sprite):
@@ -254,7 +187,8 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.Surface((width, width), pygame.SRCALPHA, 32)
         pygame.draw.line(self.image, pygame.Color('white'), (0, 0), (width * cos(radians(angle)), width * sin(radians(angle))), 2)
         self.rect = pygame.Rect(x, y, width, width)
-        self.width, self.angle = width, angle        self.vx = 10 * cos(radians(angle))
+        self.width, self.angle = width, angle
+        self.vx = 10 * cos(radians(angle))
         self.vy = 10 * sin(radians(angle))
 
     def update(self):
@@ -288,40 +222,40 @@ class Border(pygame.sprite.Sprite):
             self.image = pygame.Surface([x2 - x1, 1])
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
-    def game():
-        running = True
-        r, g, b = 0, 0, 0
-        for i in range(10):
-            for j in range(10):
-                Bubble((400 + i * 60, 0 + j * 60))
-        Border(5, 5, WIDTH - 5, 5)
-        Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
-        Border(5, 5, 5, HEIGHT - 5)
-        Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
-        gun1 = Gun((30, 300), True, True, False)
-        gun2 = Gun((1200, 300), False, False, True)
-        Bullet(100, 300, 20, 30)
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
-                        r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
-                        create_particles(pygame.mouse.get_pos())
-                    if gun1.rotating:
-                        gun2.fire()
-                    else:
-                        gun1.fire()
-                    for bubble in all_sprites:
-                        if bubble.__class__ == Bubble:
-                            bubble.update(event)
-            screen.fill((r, g, b))
-            all_sprites.draw(screen)
-            all_sprites.update()
-            pygame.display.flip()
-            clock.tick(FPS)
-        pygame.quit()
+def game():
+    running = True
+    r, g, b = 0, 0, 0
+    for i in range(10):
+        for j in range(10):
+            Bubble((400 + i * 60, 0 + j * 60))
+    Border(5, 5, WIDTH - 5, 5)
+    Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
+    Border(5, 5, 5, HEIGHT - 5)
+    Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
+    gun1 = Gun((30, 300), True, True, False)
+    gun2 = Gun((1200, 300), False, False, True)
+    Bullet(100, 300, 20, 30)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
+                    r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+                    create_particles(pygame.mouse.get_pos())
+                if gun1.rotating:
+                    gun2.fire()
+                else:
+                    gun1.fire()
+                for bubble in all_sprites:
+                    if bubble.__class__ == Bubble:
+                        bubble.update(event)
+        screen.fill((r, g, b))
+        all_sprites.draw(screen)
+        all_sprites.update()
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.quit()
 
 
 all_content()
