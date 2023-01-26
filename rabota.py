@@ -13,11 +13,22 @@ horizontal_borders = pygame.sprite.Group()
 vertical_borders = pygame.sprite.Group()
 bubbles = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+guns = pygame.sprite.Group()
 pygame.display.set_caption('Bubble shooter')
 clock = pygame.time.Clock()
 FPS = 50
 screen_rect = (0, 0, WIDTH, HEIGHT)
 GRAVITY = 0.2
+HITS = {1: {1: 2,
+            2: 1,
+            3: 3},
+        2: {1: 3,
+            2: 2,
+            3: 1},
+        3: {1: 1,
+            2: 3,
+            3: 2}
+        }
 
 
 def load_image(name, colorkey=None):
@@ -115,24 +126,26 @@ class Button:
 
 class Gun(pygame.sprite.Sprite):
     def __init__(self, pos, rotate, rotate_right, reverse):
-        super().__init__(all_sprites)
+        super().__init__(all_sprites, guns)
         image = load_image(random.choice(['blue.png', 'red.png', 'green.png']))
         self.color = 1 if image == load_image('blue.png') else 2 \
             if image == load_image('red.png') else 3
         if reverse:
             image = pygame.transform.flip(image, 1, 0)
+
         self.image = pygame.transform.scale(image, (70, 70))
         self.origin = self.image
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = pos
         self.rotating = rotate
-        self.angle = 0
+        self.angle = 30
         self.right = rotate_right
+        self.reverse = reverse
 
     def update(self):
         if self.rotating:
-            self.angle = (self.angle - 1) % 360 if self.right \
-                else (self.angle + 1) % 360
+            #self.angle = (self.angle - 1) % 360 if self.right \
+                #else (self.angle + 1) % 360
             self.rotate()
 
     def rotate(self):
@@ -140,39 +153,45 @@ class Gun(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def fire(self):
-        x, y = self.rect.x, self.rect.y
         angle = self.angle
-        Bullet(x, y, 20, angle)
+        if self.reverse:
+            angle = -angle
+            x, y = self.rect.x - 10, self.rect.y - 10
+        else:
+            x, y = self.rect.x + 10, self.rect.y + 10
+        Bullet(x, y, 20, -angle, self.color, self.reverse)
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, angle):
+    def __init__(self, x, y, width, angle, color, reverse):
         super().__init__(all_sprites, bullets)
         self.image = pygame.Surface((width, width), pygame.SRCALPHA, 32)
-        pygame.draw.line(self.image, pygame.Color('white'), (0, 0), (width * cos(radians(angle)), width * sin(radians(angle))), 2)
+        self.color = color
+        pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
         self.rect = pygame.Rect(x, y, width, width)
         self.width, self.angle = width, angle
         self.vx = 10 * cos(radians(angle))
+        if reverse:
+            self.vx = -self.vx
         self.vy = 10 * sin(radians(angle))
         self.hp = 10
 
     def update(self):
         self.rect = self.rect.move(self.vx, self.vy)
         if pygame.sprite.spritecollideany(self, horizontal_borders):
+            self.hp -= 2
+            if self.hp < 1:
+                self.kill()
             self.vy = -self.vy
-            self.image = pygame.Surface((2 * self.width, 2 * self.width), pygame.SRCALPHA, 32)
-            if self.vy < 0:
-                pygame.draw.line(self.image, pygame.Color('white'), (0, self.width), (self.width * cos(radians(self.angle)), self.width * (1 - sin(radians(self.angle)))), 2)
-            else:
-                pygame.draw.line(self.image, pygame.Color('white'), (0, 0), (self.width * cos(radians(self.angle)), self.width * sin(radians(self.angle))), 2)
+            self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
+            pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
         if pygame.sprite.spritecollideany(self, vertical_borders):
+            self.hp -= 2
+            if self.hp < 1:
+                self.kill()
             self.vx = -self.vx
-            if self.vx < 0:
-                self.image = pygame.Surface((2 * self.width, 2 * self.width), pygame.SRCALPHA, 32)
-                pygame.draw.line(self.image, pygame.Color('white'), (self.width, 0), (self.width * (1 - cos(radians(self.angle))), self.width * sin(radians(self.angle))), 2)
-            else:
-                self.image = pygame.Surface((2 * self.width, 2 * self.width), pygame.SRCALPHA, 32)
-                pygame.draw.line(self.image, pygame.Color('white'), (self.width, 0), (self.width * (1 - cos(radians(self.angle))), self.width * sin(radians(self.angle))), 2)
+            self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
+            pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
 
 
 class Border(pygame.sprite.Sprite):
@@ -290,14 +309,13 @@ def game():
     Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
     gun1 = Gun((30, 300), True, True, False)
     gun2 = Gun((1200, 300), False, False, True)
-    Bullet(100, 300, 20, 30)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
-                r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+                #r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
                 create_particles(pygame.mouse.get_pos())
                 if gun1.rotating:
                     gun2.fire()
@@ -308,7 +326,9 @@ def game():
                         bubble.update(event)
         screen.fill((r, g, b))
         hits = pygame.sprite.groupcollide(bubbles, bullets, False, False)
+        gun_hit = pygame.sprite.groupcollide(guns, bullets, False, False)
         collisions(hits)
+        gun_collision(gun_hit)
         all_sprites.draw(screen)
         all_sprites.update()
         pygame.display.flip()
@@ -317,18 +337,25 @@ def game():
 
 
 def collisions(hits):
+
     for bubble, bullet in hits.items():
-        bullet
-        if bullet.color == bullet.color:
-            hit = 2 if bullet.hp >= 2 else 1
-            bullet.hp -= hit
-            if hit == 2:
-                if bullet.hp > 0:
-                    pygame.sprite.groupcollide(bubbles, bullets, True, False)
-                else:
-                    pygame.sprite.groupcollide(bubbles, bullets, True, True)
-            else:
-                pygame.sprite.groupcollide(bubbles, bullets, False, True)
+        bullet = bullet[0]
+        dmg = HITS[bullet.color][bubble.color]
+        hit = dmg if bullet.hp >= dmg else bullet.hp
+        bullet.hp -= hit
+        if bullet.hp > 0:
+            #pygame.sprite.groupcollide(bubbles, bullets, True, False)
+            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, False)
+        else:
+            #pygame.sprite.groupcollide(bubbles, bullets, True, True)
+            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, True)
+
+def gun_collision(hits):
+    for guns, bullets in hits.items():
+        pass
+
+
+
 
 
 def all_content():
