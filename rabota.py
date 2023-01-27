@@ -14,6 +14,7 @@ vertical_borders = pygame.sprite.Group()
 bubbles = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 guns = pygame.sprite.Group()
+explosions = pygame.sprite.Group()
 pygame.display.set_caption('Bubble shooter')
 clock = pygame.time.Clock()
 FPS = 50
@@ -124,87 +125,10 @@ class Button:
                 self.was_clicked = True
 
 
-class Gun(pygame.sprite.Sprite):
-    def __init__(self, pos, rotate, rotate_right, reverse):
-        super().__init__(all_sprites, guns)
-        image = load_image(random.choice(['blue.png', 'red.png', 'green.png']))
-        self.color = 1 if image == load_image('blue.png') else 2 \
-            if image == load_image('red.png') else 3
-        if reverse:
-            image = pygame.transform.flip(image, 1, 0)
-
-        self.image = pygame.transform.scale(image, (70, 70))
-        self.origin = self.image
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos
-        self.rotating = rotate
-        self.angle = 30
-        self.right = rotate_right
-        self.reverse = reverse
-
-    def update(self):
-        if self.rotating:
-            #self.angle = (self.angle - 1) % 360 if self.right \
-                #else (self.angle + 1) % 360
-            self.rotate()
-
-    def rotate(self):
-        self.image = pygame.transform.rotate(self.origin, self.angle)
-        self.rect = self.image.get_rect(center=self.rect.center)
-
-    def fire(self):
-        angle = self.angle
-        if self.reverse:
-            angle = -angle
-            x, y = self.rect.x - 10, self.rect.y - 10
-        else:
-            x, y = self.rect.x + 10, self.rect.y + 10
-        Bullet(x, y, 20, -angle, self.color, self.reverse)
-
-
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, angle, color, reverse):
-        super().__init__(all_sprites, bullets)
-        self.image = pygame.Surface((width, width), pygame.SRCALPHA, 32)
-        self.color = color
-        pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
-        self.rect = pygame.Rect(x, y, width, width)
-        self.width, self.angle = width, angle
-        self.vx = 10 * cos(radians(angle))
-        if reverse:
-            self.vx = -self.vx
-        self.vy = 10 * sin(radians(angle))
-        self.hp = 10
-
-    def update(self):
-        self.rect = self.rect.move(self.vx, self.vy)
-        if pygame.sprite.spritecollideany(self, horizontal_borders):
-            self.hp -= 2
-            if self.hp < 1:
-                self.kill()
-            self.vy = -self.vy
-            self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
-            pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
-        if pygame.sprite.spritecollideany(self, vertical_borders):
-            self.hp -= 2
-            if self.hp < 1:
-                self.kill()
-            self.vx = -self.vx
-            self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
-            pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
-
-
-class Border(pygame.sprite.Sprite):
-    def __init__(self, x1, y1, x2, y2):
-        super().__init__(all_sprites)
-        if x1 == x2:
-            self.add(vertical_borders)
-            self.image = pygame.Surface([1, y2 - y1])
-            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
-        else:
-            self.add(horizontal_borders)
-            self.image = pygame.Surface([x2 - x1, 1])
-            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
+explosion_animation = []
+for i in range(9):
+    img = pygame.transform.scale(load_image(f'Explosion{i}.png'), (30, 30))
+    explosion_animation.append(img)
 
 
 def create_particles(position):
@@ -215,6 +139,7 @@ def create_particles(position):
 
 
 def start_screen():
+    screen = pygame.display.set_mode(SIZE)
     text = pygame.font.SysFont('impact', 60).render('Bubble Shooter', False, (255, 255, 255))
     btn = Button()
     btn.set_text('Начать')
@@ -246,55 +171,143 @@ def start_screen():
     return btn.was_clicked
 
 
-# class Gun(pygame.sprite.Sprite):
-#     def blitRotate(self, image, pos, origin_pos, angle, surface):
-#         self.surface = surface
-#
-#         image_rect = image.get_rect(topleft=(pos[0] - origin_pos[0], pos[1] - origin_pos[1]))
-#         offset_center_to_pivot = pygame.math.Vector2(pos) - image_rect.center
-#
-#         rotated_offset = offset_center_to_pivot.rotate(-angle)
-#
-#         rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
-#
-#         rotated_image = pygame.transform.rotate(image, angle)
-#         rotated_image_rect = rotated_image.get_rect(center=rotated_image_center)
-#
-#         self.surface.blit(rotated_image, rotated_image_rect)
-#
-#     def blitRotate2(self, image, topleft, angle):
-#         rotated_image = pygame.transform.rotate(image, angle)
-#         new_rect = rotated_image.get_rect(center=image.get_rect(topleft=topleft).center)
-#
-#         self.surface.blit(rotated_image, new_rect.topleft)
-#         pygame.draw.rect(self.surface, (255, 0, 0), new_rect, 2)
-#
-#     try:
-#         image = pygame.transform.scale(load_image(random.choice(
-#             ['blue.png', 'red.png', 'green.png'])), (70, 70))
-#     except Exception:
-#         text = pygame.font.SysFont('Times New Roman', 50).render('image', False, (255, 255, 0))
-#         image = pygame.Surface((text.get_width() + 1, text.get_height() + 1))
-#         pygame.draw.rect(image, (0, 0, 255), (1, 1, *text.get_size()))
-#         image.blit(text, (1, 1))
-#     w, h = image.get_size()
-#
-#     angle = 0
-#     done = False
-#     while not done:
-#         clock.tick(50)
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 done = True
-#
-#         pos = (screen.get_width() / 2, screen.get_height() / 2)
-#
-#         screen.fill(0)
-#         blitRotate(screen, image, pos, (w / 2, h / 2), angle)
-#
-#         angle += 2
-#
-#         pygame.display.flip()
+class Gun(pygame.sprite.Sprite):
+    def __init__(self, pos, rotate, rotate_right, reverse, name):
+        super().__init__(all_sprites, guns)
+        image = load_image(random.choice(['blue.png', 'red.png', 'green.png']))
+        self.color = 1 if image == load_image('blue.png') else 2 \
+            if image == load_image('red.png') else 3
+        if reverse:
+            image = pygame.transform.flip(image, 1, 0)
+
+        self.image = pygame.transform.scale(image, (70, 70))
+        self.origin = self.image
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = pos
+        self.rotating = rotate
+        self.angle = 30
+        self.right = rotate_right
+        self.reverse = reverse
+        self.name = name
+
+    def update(self):
+        if self.rotating:
+            self.angle = (self.angle - 1) % 360 if self.right \
+                else (self.angle + 1) % 360
+            self.rotate()
+
+    def rotate(self):
+        self.image = pygame.transform.rotate(self.origin, self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def fire(self):
+        angle = self.angle
+        if self.reverse:
+            angle = -angle
+            x, y = self.rect.x - 10, self.rect.y - 10
+        else:
+            x, y = self.rect.x + 10, self.rect.y + 10
+        Bullet(x, y, 20, -angle, self.color, self.reverse, self.name)
+
+    def hit(self, bullet):
+        Explosion(self.rect.center, self, bullet)
+
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, angle, color, reverse, name):
+        super().__init__(all_sprites, bullets)
+        self.image = pygame.Surface((width, width), pygame.SRCALPHA, 32)
+        self.color = color
+        pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
+        self.rect = pygame.Rect(x, y, width, width)
+        self.width, self.angle = width, angle
+        self.vx = 10 * cos(radians(angle))
+        if reverse:
+            self.vx = -self.vx
+        self.vy = 10 * sin(radians(angle))
+        self.hp = 10
+        self.name = name
+
+    def update(self):
+        self.rect = self.rect.move(self.vx, self.vy)
+        if pygame.sprite.spritecollideany(self, horizontal_borders):
+            self.hp -= 2
+            if self.hp < 1:
+                self.kill()
+            self.vy = -self.vy
+            self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
+            pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
+        if pygame.sprite.spritecollideany(self, vertical_borders):
+            self.hp -= 2
+            if self.hp < 1:
+                self.kill()
+            self.vx = -self.vx
+            self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
+            pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
+
+    def boom(self):
+        pass
+
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center, gun, bullet):
+        super().__init__(explosions, all_sprites)
+        self.image = explosion_animation[0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 50
+        self.gun = gun
+        self.bullet = bullet
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(explosion_animation):
+                self.kill()
+                event_type = pygame.USEREVENT + 1
+                pygame.event.post(pygame.event.Event(event_type, {self.gun: self.bullet}))
+                # event.get() -> gun.kill() -> gama over -> score -> all_content()
+            else:
+                center = self.rect.center
+                self.image = explosion_animation[self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
+
+
+class Border(pygame.sprite.Sprite):
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(all_sprites)
+        if x1 == x2:
+            self.add(vertical_borders)
+            self.image = pygame.Surface([1, y2 - y1])
+            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
+        else:
+            self.add(horizontal_borders)
+            self.image = pygame.Surface([x2 - x1, 1])
+            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
+
+
+def collisions(hits):
+    for bubble, bullet in hits.items():
+        bullet = bullet[0]
+        dmg = HITS[bullet.color][bubble.color]
+        hit = dmg if bullet.hp >= dmg else bullet.hp
+        bullet.hp -= hit
+        if bullet.hp > 0:
+            # pygame.sprite.groupcollide(bubbles, bullets, True, False)
+            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, False)
+        else:
+            # pygame.sprite.groupcollide(bubbles, bullets, True, True)
+            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, True)
+
+
+def gun_collision(hits):
+    for hit in hits:
+        hit.hit(hits[hit][0])
 
 
 def game():
@@ -307,15 +320,15 @@ def game():
     Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
     Border(5, 5, 5, HEIGHT - 5)
     Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
-    gun1 = Gun((30, 300), True, True, False)
-    gun2 = Gun((1200, 300), False, False, True)
+    gun1 = Gun((30, 300), True, True, False, 'Player 1')
+    gun2 = Gun((1200, 300), False, False, True, 'Player 2')
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
-                #r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+                # r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
                 create_particles(pygame.mouse.get_pos())
                 if gun1.rotating:
                     gun2.fire()
@@ -324,6 +337,14 @@ def game():
                 for bubble in all_sprites:
                     if bubble.__class__ == Bubble:
                         bubble.update(event)
+            if event.type == pygame.USEREVENT + 1:
+                for key in event.__dict__.keys():
+                    gun, bullet = key, event.__dict__[key]
+                print(f'{gun.name} was hit by {bullet.name}')
+                gun.kill()
+                running = False
+                return gameover()
+                # send in some data for score
         screen.fill((r, g, b))
         hits = pygame.sprite.groupcollide(bubbles, bullets, False, False)
         gun_hit = pygame.sprite.groupcollide(guns, bullets, False, False)
@@ -333,29 +354,42 @@ def game():
         all_sprites.update()
         pygame.display.flip()
         clock.tick(FPS)
-    pygame.quit()
 
 
-def collisions(hits):
-
-    for bubble, bullet in hits.items():
-        bullet = bullet[0]
-        dmg = HITS[bullet.color][bubble.color]
-        hit = dmg if bullet.hp >= dmg else bullet.hp
-        bullet.hp -= hit
-        if bullet.hp > 0:
-            #pygame.sprite.groupcollide(bubbles, bullets, True, False)
-            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, False)
-        else:
-            #pygame.sprite.groupcollide(bubbles, bullets, True, True)
-            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, True)
-
-def gun_collision(hits):
-    for guns, bullets in hits.items():
-        pass
-
-
-
+def gameover():
+    running = True
+    # score = ...
+    score = 0
+    text = pygame.font.SysFont('impact', 60).render('Game over', False, (255, 255, 255))
+    score_text = pygame.font.SysFont('impact', 40).render(f'{score}', False, (255, 255, 255))
+    btn = Button()
+    btn.set_text('Начать заново')
+    btn.set_font('impact')
+    btn.set_rect(350, 400, 200, 80)
+    btn.set_size(60)
+    btn_main = Button()
+    btn_main.set_text('Меню')
+    btn_main.set_font('impact')
+    btn_main.set_rect(350, 500, 200, 80)
+    btn_main.set_size(60)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                btn.clicked(event.pos)
+                if btn.was_clicked:
+                    return game()
+                btn_main.clicked(event.pos)
+                if btn_main.was_clicked:
+                    return start_screen()
+        screen.fill('black')
+        btn.render()
+        btn_main.render()
+        screen.blit(text, (600, 100))
+        screen.blit(score_text, (600, 200))
+        pygame.display.flip()
+        clock.tick(FPS)
 
 
 def all_content():
