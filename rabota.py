@@ -298,8 +298,9 @@ def collisions(hits):
             # pygame.sprite.groupcollide(bubbles, bullets, True, True)
             pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, True)
 
+
 def start_screen():
-    text = pygame.font.SysFont('impact', 60).render('Bubble Shooter', False, (255, 255, 255))
+    text = pygame.font.SysFont('impact', 100).render('Bubble Shooter', False, (255, 255, 255))
     #start_btn = Button()
     #start_btn.set_text('Начать')
     #start_btn.set_font('impact')
@@ -311,7 +312,10 @@ def start_screen():
     #exit_btn.set_rect(600, 300, 200, 80)
     #exit_btn.set_size(60)
     menu = Menu()
-    menu.append_option("start", game)
+    menu.append_option("START", game)
+    menu.append_option('SETTINGS', settings)
+    menu.append_option('AUTHORS', authors)
+    menu.append_option('RULES', rules)
     menu.append_option('QUIT', quit)
 
     running = True
@@ -327,27 +331,36 @@ def start_screen():
                 #if exit_btn.was_clicked:
                     #pygame.event.post(pygame.event.Event(pygame.QUIT))
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w:
+                if event.key == pygame.K_w or event.key == pygame.K_UP:
                     menu.switch(-1)
-                elif event.key == pygame.K_s:
+                elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
                     menu.switch(+1)
-                elif event.key == pygame.K_SPACE:
+                elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                     return menu._callbacks[menu._current_options_index]()
+
         #start_btn.render()
         #exit_btn.render()
         screen.fill((0, 0, 0))
-        screen.blit(text, (260, 380))
+        screen.blit(text, (300, 30))
 
-        menu.draw(screen, 100, 100, 75)
+        menu.draw(screen, 400, 250, 75)
         pygame.display.flip()
         clock.tick(FPS)
 
-    #return start_btn.was_clicked
 
 def gun_collision(hits):
     for hit in hits:
         hit.hit(hits[hit][0])
 
+
+def settings():
+    pass
+
+def authors():
+    pass
+
+def rules():
+    pass
 
 def game():
     running = True
@@ -397,37 +410,28 @@ def game():
 
 
 def gameover():
+    text = pygame.font.SysFont('impact', 100).render('Bubble Shooter', False, (255, 255, 255))
+    menu = Menu()
+    menu.append_option("NEW GAME", game)
+    menu.append_option('SETTINGS', settings)
+    menu.append_option('QUIT', quit)
+
     running = True
-    # score = ...
-    score = 0
-    text = pygame.font.SysFont('impact', 60).render('Game over', False, (255, 255, 255))
-    score_text = pygame.font.SysFont('impact', 40).render(f'{score}', False, (255, 255, 255))
-    btn = Button()
-    btn.set_text('Начать заново')
-    btn.set_font('impact')
-    btn.set_rect(350, 400, 200, 80)
-    btn.set_size(60)
-    btn_main = Button()
-    btn_main.set_text('Меню')
-    btn_main.set_font('impact')
-    btn_main.set_rect(350, 500, 200, 80)
-    btn_main.set_size(60)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                btn.clicked(event.pos)
-                if btn.was_clicked:
-                    return game()
-                btn_main.clicked(event.pos)
-                if btn_main.was_clicked:
-                    return start_screen()
-        screen.fill('black')
-        btn.render()
-        btn_main.render()
-        screen.blit(text, (600, 100))
-        screen.blit(score_text, (600, 200))
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w or event.key == pygame.K_UP:
+                    menu.switch(-1)
+                elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                    menu.switch(+1)
+                elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                    return menu._callbacks[menu._current_options_index]()
+        screen.fill((0, 0, 0))
+        screen.blit(text, (300, 30))
+
+        menu.draw(screen, 400, 250, 75)
         pygame.display.flip()
         clock.tick(FPS)
 
