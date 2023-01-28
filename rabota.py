@@ -16,8 +16,9 @@ bullets = pygame.sprite.Group()
 guns = pygame.sprite.Group()
 explosions = pygame.sprite.Group()
 pygame.display.set_caption('Bubble shooter')
+ARIAL_50 = pygame.font.SysFont('arial', 50)
 clock = pygame.time.Clock()
-FPS = 50
+FPS = 200
 screen_rect = (0, 0, WIDTH, HEIGHT)
 GRAVITY = 0.2
 HITS = {1: {1: 2,
@@ -46,6 +47,32 @@ def load_image(name, colorkey=None):
     else:
         image = image.convert_alpha()
     return image
+
+
+class Menu:
+    def __init__(self):
+        self._option_surfaces = []
+        self._callbacks = []
+        self._current_options_index = 0
+
+    def append_option(self, option, callback):
+        self._option_surfaces.append(ARIAL_50.render(option, True, (255, 255, 255)))
+        self._callbacks.append(callback)
+
+    def switch(self, direction):
+        self._current_options_index = max(0,
+                                          min(self._current_options_index + direction, len(self._option_surfaces) - 1))
+
+    def select(self):
+        pass
+
+    def draw(self, surf, x, y, option_y_padding):
+        for i, option in enumerate(self._option_surfaces):
+            option_rect = option.get_rect()
+            option_rect.topleft = (x, y + i * option_y_padding)
+            if i == self._current_options_index:
+                pygame.draw.rect(surf, (0, 100, 0), option_rect)
+            surf.blit(option, option_rect)
 
 
 class Particle(pygame.sprite.Sprite):
@@ -138,39 +165,6 @@ def create_particles(position):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
 
-def start_screen():
-    screen = pygame.display.set_mode(SIZE)
-    text = pygame.font.SysFont('impact', 60).render('Bubble Shooter', False, (255, 255, 255))
-    btn = Button()
-    btn.set_text('Начать')
-    btn.set_font('impact')
-    btn.set_rect(350, 600, 200, 80)
-    btn.set_size(60)
-    exit_btn = Button()
-    exit_btn.set_text('Выйти')
-    exit_btn.set_font('impact')
-    exit_btn.set_rect(350, 700, 200, 80)
-    exit_btn.set_size(60)
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                btn.clicked(event.pos)
-                if btn.was_clicked:
-                    pygame.event.post(pygame.event.Event(pygame.QUIT))
-                exit_btn.clicked(event.pos)
-                if exit_btn.was_clicked:
-                    pygame.event.post(pygame.event.Event(pygame.QUIT))
-        screen.blit(text, (260, 380))
-        btn.render()
-        exit_btn.render()
-        pygame.display.flip()
-        clock.tick(FPS)
-    return btn.was_clicked
-
-
 class Gun(pygame.sprite.Sprite):
     def __init__(self, pos, rotate, rotate_right, reverse, name):
         super().__init__(all_sprites, guns)
@@ -192,8 +186,8 @@ class Gun(pygame.sprite.Sprite):
 
     def update(self):
         if self.rotating:
-            self.angle = (self.angle - 1) % 360 if self.right \
-                else (self.angle + 1) % 360
+            self.angle = (self.angle - 2) % 360 if self.right \
+                else (self.angle + 2) % 360
             self.rotate()
 
     def rotate(self):
@@ -304,6 +298,51 @@ def collisions(hits):
             # pygame.sprite.groupcollide(bubbles, bullets, True, True)
             pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, True)
 
+def start_screen():
+    text = pygame.font.SysFont('impact', 60).render('Bubble Shooter', False, (255, 255, 255))
+    #start_btn = Button()
+    #start_btn.set_text('Начать')
+    #start_btn.set_font('impact')
+    #start_btn.set_rect(600, 200, 200, 80)
+    #start_btn.set_size(60)
+    #exit_btn = Button()
+    #exit_btn.set_text('Выйти')
+    #exit_btn.set_font('impact')
+    #exit_btn.set_rect(600, 300, 200, 80)
+    #exit_btn.set_size(60)
+    menu = Menu()
+    menu.append_option("start", game)
+    menu.append_option('QUIT', quit)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            #elif event.type == pygame.MOUSEBUTTONDOWN:
+                #start_btn.clicked(event.pos)
+                #if start_btn.was_clicked:
+                    #pygame.event.post(pygame.event.Event(pygame.QUIT))
+                #exit_btn.clicked(event.pos)
+                #if exit_btn.was_clicked:
+                    #pygame.event.post(pygame.event.Event(pygame.QUIT))
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    menu.switch(-1)
+                elif event.key == pygame.K_s:
+                    menu.switch(+1)
+                elif event.key == pygame.K_SPACE:
+                    return menu._callbacks[menu._current_options_index]()
+        #start_btn.render()
+        #exit_btn.render()
+        screen.fill((0, 0, 0))
+        screen.blit(text, (260, 380))
+
+        menu.draw(screen, 100, 100, 75)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+    #return start_btn.was_clicked
 
 def gun_collision(hits):
     for hit in hits:
@@ -354,6 +393,7 @@ def game():
         all_sprites.update()
         pygame.display.flip()
         clock.tick(FPS)
+    pygame.quit()
 
 
 def gameover():
