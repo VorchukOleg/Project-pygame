@@ -75,6 +75,48 @@ class Menu:
             surf.blit(option, option_rect)
 
 
+class Board(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((WIDTH, HEIGHT))
+        self.image.fill((13,13,13))
+        self.image.set_colorkey((13,13,13))
+        self.rect = self.image.get_rect()
+        self.font = pygame.font.SysFont("monospace", 30)
+
+    def add(self, letter, pos):
+        s = self.font.render(letter, 1, (0, 200, 0))
+        self.image.blit(s, pos)
+
+class Cursor(pygame.sprite.Sprite):
+    def __init__(self, board):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((10, 20))
+        self.image.fill((0,250,0))
+        self.text_height = 30
+        self.text_width = 20
+        self.rect = self.image.get_rect(topleft=(self.text_width, self.text_height))
+        self.board = board
+        self.text = ''
+        self.cooldown = 0
+
+    def write(self, text):
+        self.text = list(text)
+
+    def update(self):
+        if not self.cooldown and self.text:
+            letter = self.text.pop(0)
+            if letter == '\n':
+                self.rect.move_ip((0, self.text_height))
+                self.rect.x = self.text_width
+            else:
+                self.board.add(letter, self.rect.topleft)
+                self.rect.move_ip((self.text_width, 0))
+            self.cooldown = 5
+
+        if self.cooldown:
+            self.cooldown -= 1
+
 class Particle(pygame.sprite.Sprite):
     fire = [load_image("star.png")]
     for scale in (5, 10, 20):
@@ -378,7 +420,45 @@ def authors():
 
 
 def rules():
-    pass
+    pygame.display.set_caption('Rules')
+
+    font = pygame.font.SysFont('comicsansms', 30)
+    font0 = pygame.font.SysFont('comicsansms', 50)
+    board = Board()
+    cursor = Cursor(board)
+    all_sprites.add(cursor, board)
+    text = """
+Welcome!
+
+In this game you have your own gun, lots of annoying bubbles
+and an opponent who wants to shoot you! Do it first!
+
+1) Use the WASD buttons or ARROWS
+to switch in the game menu and settings.
+
+2) In the settings, you write your name,
+choose the speed of your gun
+and the difficulty level.
+
+3) Guns shoot in turn, click the SPASE button to shoot.
+
+Good luck!(Tap SPACE to continue)"""
+    running = True
+    cursor.write(text)
+    while running:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return start_screen()
+        screen.fill((0, 0, 0))
+        all_sprites.update()
+        all_sprites.draw(screen)
+        clock.tick(FPS)
+        pygame.display.flip()
+
+    pygame.quit()
 
 def stat():
     pass
