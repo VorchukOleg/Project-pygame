@@ -17,7 +17,7 @@ bullets = pygame.sprite.Group()
 guns = pygame.sprite.Group()
 explosions = pygame.sprite.Group()
 pygame.display.set_caption('Bubble shooter')
-ARIAL_50 = pygame.font.SysFont('arial', 50)
+ARIAL_50 = pygame.font.SysFont('comicsansms', 50)
 clock = pygame.time.Clock()
 FPS = 200
 screen_rect = (0, 0, WIDTH, HEIGHT)
@@ -211,7 +211,7 @@ class Button:
 
 explosion_animation = []
 for i in range(9):
-    img = pygame.transform.scale(load_image(f'Explosion{i}.png'), (30, 30))
+    img = pygame.transform.scale(load_image(f'Explosion{i}.png'), (80, 80))
     explosion_animation.append(img)
 
 
@@ -359,7 +359,7 @@ def collisions(hits):
 
 
 def start_screen():
-    text = pygame.font.SysFont('impact', 100).render('Bubble Shooter', False, (255, 255, 255))
+    text = pygame.font.SysFont('comicsansms', 100).render('Bubble Shooter', False, (255, 255, 255))
     menu = Menu()
     menu.append_option("START", settings)
     menu.append_option('STATISTICS', stat)
@@ -399,29 +399,29 @@ def easy():
 
 def settings():
     running = True
-    text_d = pygame.font.SysFont('impact', 50).render('Difficulty', False, (255, 255, 255))
-    text_v = pygame.font.SysFont('impact', 50).render('Velocity', False, (255, 255, 255))
-    text_p1 = pygame.font.SysFont('impact', 50).render('Player 1:', False, (255, 255, 255))
-    text_p2 = pygame.font.SysFont('impact', 50).render('Player 2:', False, (255, 255, 255))
-    name1 = pygame.draw.rect(screen, 'white', (200, 30, 400, 50))
-    name2 = pygame.draw.rect(screen, 'white', (700, 30, 400, 50))
+    text_d = pygame.font.SysFont('Times New Roman', 50).render('Difficulty', False, (255, 255, 255))
+    text_v = pygame.font.SysFont('Times New Roman', 50).render('Velocity', False, (255, 255, 255))
+    text_p1 = pygame.font.SysFont('Times New Roman', 40).render('Player 1:', False, (255, 255, 255))
+    text_p2 = pygame.font.SysFont('Times New Roman', 40).render('Player 2:', False, (255, 255, 255))
+    name1 = pygame.draw.rect(screen, 'white', (190, 30, 400, 50))
+    name2 = pygame.draw.rect(screen, 'white', (800, 30, 400, 50))
     name_1 = name_2 = ''
     menu = Menu()
     menuv = Menu()
-    menu.append_option("1", easy)  # CHANGE
-    menu.append_option('2', easy)
-    menu.append_option('3', easy)
-    menuv.append_option("1", easy)
-    menuv.append_option('2', easy)
-    menuv.append_option('3', easy)
+    menu.append_option("beginner", easy)  # CHANGE
+    menu.append_option('normal', easy)
+    menu.append_option('expert', easy)
+    menuv.append_option("low", easy)
+    menuv.append_option('average', easy)
+    menuv.append_option('high', easy)
     changing_name1 = changing_name2 = False
     current_menu = 0
     btn = Button()
     btn.set_text('GAME START')
     btn.set_size(100)
-    btn.set_font('impact')
+    btn.set_font('comicsansms')
     btn.set_draw_rect(False)
-    btn.set_rect(500, 600, 200, 100)
+    btn.set_rect(300, 550, 200, 100)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -470,17 +470,17 @@ def settings():
         screen.fill('black')
         btn.render()
         pygame.draw.rect(screen, 'white', (200, 30, 400, 50), 1)
-        pygame.draw.rect(screen, 'white', (700, 30, 400, 50), 1)
+        pygame.draw.rect(screen, 'white', (800, 30, 400, 50), 1)
         all_sprites.draw(screen)
         all_sprites.update()
-        menu.draw(screen, 300, 250, 75)
-        menuv.draw(screen, 700, 250, 75)
-        screen.blit(text_p1, (200, 30))
-        screen.blit(text_p2, (1000, 30))
-        screen.blit(pygame.font.SysFont('impact', 50).render(name_1, False, (255, 0, 0)), (200, 30))
-        screen.blit(pygame.font.SysFont('impact', 50).render(name_2, False, (0, 255, 0)), (700, 30))
+        menu.draw(screen, 100, 250, 75)
+        menuv.draw(screen, 800, 250, 75)
+        screen.blit(text_p1, (50, 30))
+        screen.blit(text_p2, (650, 30))
+        screen.blit(pygame.font.SysFont('monospace', 50).render(name_1, False, (255, 0, 0)), (200, 30))
+        screen.blit(pygame.font.SysFont('monospace', 50).render(name_2, False, (0, 255, 0)), (800, 30))
         screen.blit(text_d, (200, 130))
-        screen.blit(text_v, (1000, 130))
+        screen.blit(text_v, (800, 130))
         clock.tick(FPS)
         pygame.display.flip()
 
@@ -503,6 +503,8 @@ def authors():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return start_screen()
         screen.fill((0, 0, 0))
         screen.blit(text_O, (x1, 300))
         screen.blit(text_K, (x2, 350))
@@ -614,7 +616,7 @@ def game():
 
 
 def gameover():
-    text = pygame.font.SysFont('impact', 100).render('Bubble Shooter', False, (255, 255, 255))
+    text = pygame.font.SysFont('comicsansms', 100).render('Bubble Shooter', False, (255, 255, 255))
     menu = Menu()
     menu.append_option("NEW GAME", game)
     menu.append_option('MENU', start_screen)
