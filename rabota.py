@@ -6,7 +6,7 @@ from math import radians, sin, cos
 
 pygame.init()
 pygame.font.init()
-SIZE = WIDTH, HEIGHT = 1400, 800  # 610
+SIZE = WIDTH, HEIGHT = 1350, 730  # 610
 screen = pygame.display.set_mode(SIZE)
 all_sprites = pygame.sprite.Group()
 horizontal_borders = pygame.sprite.Group()
@@ -71,7 +71,7 @@ class Menu:
             option_rect = option.get_rect()
             option_rect.topleft = (x, y + i * option_y_padding)
             if i == self._current_options_index:
-                pygame.draw.rect(surf, (0, 100, 0), option_rect)
+                pygame.draw.rect(surf, (0, 125, 0), option_rect)
             surf.blit(option, option_rect)
 
 
@@ -204,7 +204,8 @@ class Gun(pygame.sprite.Sprite):
         Bullet(x, y, 20, -angle, self.color, self.reverse, self.name)
 
     def hit(self, bullet):
-        Explosion(self.rect.center, self, bullet)
+        if bullet.name != self.name:
+            Explosion(self.rect.center, self, bullet)
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -343,7 +344,7 @@ def start_screen():
         screen.fill((0, 0, 0))
         screen.blit(text, (300, 30))
 
-        menu.draw(screen, 400, 250, 75)
+        menu.draw(screen, 300, 250, 75)
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -357,7 +358,39 @@ def settings():
     pass
 
 def authors():
-    pass
+    #screen = pygame.display.set_mode((640, 480))
+    #text = pygame.font.Font(pygame.font.get_default_font(), 36).render('Bubble Shooter', True, (255, 255, 255))
+    #screen.blit(text, (300, 30))
+    screen_authors = pygame.display.set_mode(SIZE)
+    pygame.display.set_caption('Authors')
+    RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
+
+    x1 = x2 = x3 = 300
+    font = pygame.font.SysFont('comicsansms', 32)
+    text_O = font.render("VORCHUK OLEG", 1, RED, GREEN)
+    text_K = font.render("KOMOV KIRILL", 1, RED, GREEN)
+    text_I = font.render("ZELENOV IGOR", 1, RED, GREEN)
+
+    running = True
+    while running:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.fill((0, 0, 0))
+        screen.blit(text_O, (x1, 300))
+        screen.blit(text_K, (x2, 350))
+        screen.blit(text_I, (x3, 400))
+        clock.tick(FPS)
+        pygame.display.flip()
+        x1 = (x1 - 2) % WIDTH
+        x2 = (x2 + 2) % WIDTH
+        x3 = (x3 - 2) % WIDTH
+
+    pygame.quit()
+
 
 def rules():
     pass
@@ -365,9 +398,9 @@ def rules():
 def game():
     running = True
     r, g, b = 0, 0, 0
-    for i in range(10):
-        for j in range(10):
-            Bubble((400 + i * 60, 0 + j * 60))
+    for i in range(12):
+        for j in range(12):
+            Bubble((300 + i * 60, 0 + j * 60))
     Border(5, 5, WIDTH - 5, 5)
     Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
     Border(5, 5, 5, HEIGHT - 5)
@@ -431,7 +464,7 @@ def gameover():
         screen.fill((0, 0, 0))
         screen.blit(text, (300, 30))
 
-        menu.draw(screen, 400, 250, 75)
+        menu.draw(screen, 300, 250, 75)
         pygame.display.flip()
         clock.tick(FPS)
 
