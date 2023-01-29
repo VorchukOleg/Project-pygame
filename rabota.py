@@ -1,3 +1,4 @@
+import csv
 import random
 import os
 import pygame
@@ -20,7 +21,7 @@ ARIAL_50 = pygame.font.SysFont('arial', 50)
 clock = pygame.time.Clock()
 FPS = 200
 screen_rect = (0, 0, WIDTH, HEIGHT)
-GRAVITY = 0.2
+GRAVITY = 0.05
 HITS = {1: {1: 2,
             2: 1,
             3: 3},
@@ -31,6 +32,16 @@ HITS = {1: {1: 2,
             2: 3,
             3: 2}
         }
+VELOCITIES = {
+    '1': 1,
+    '2': 2,
+    '3': 3
+}
+DIFFICULTIES = {
+    '1': 1,
+    '2': 2,
+    '3': 3
+}
 
 
 def load_image(name, colorkey=None):
@@ -79,8 +90,8 @@ class Board(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((WIDTH, HEIGHT))
-        self.image.fill((13,13,13))
-        self.image.set_colorkey((13,13,13))
+        self.image.fill((13, 13, 13))
+        self.image.set_colorkey((13, 13, 13))
         self.rect = self.image.get_rect()
         self.font = pygame.font.SysFont("monospace", 30)
 
@@ -88,11 +99,12 @@ class Board(pygame.sprite.Sprite):
         s = self.font.render(letter, 1, (0, 200, 0))
         self.image.blit(s, pos)
 
+
 class Cursor(pygame.sprite.Sprite):
     def __init__(self, board):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((10, 20))
-        self.image.fill((0,250,0))
+        self.image.fill((0, 250, 0))
         self.text_height = 30
         self.text_width = 20
         self.rect = self.image.get_rect(topleft=(self.text_width, self.text_height))
@@ -116,6 +128,7 @@ class Cursor(pygame.sprite.Sprite):
 
         if self.cooldown:
             self.cooldown -= 1
+
 
 class Particle(pygame.sprite.Sprite):
     fire = [load_image("star.png")]
@@ -141,10 +154,10 @@ class Particle(pygame.sprite.Sprite):
 
 
 class Bubble(pygame.sprite.Sprite):
-    def __init__(self, pos):
+    def __init__(self, pos, dif):
         super().__init__(all_sprites, bubbles)
         image = random.choice(['bluebubble.png', 'redbubble.png', 'greenbubble.png'])
-        self.image = pygame.transform.scale(load_image(image), (70, 70))
+        self.image = pygame.transform.scale(load_image(image), (70 // dif, 70 // dif))
         self.color = 1 if image == 'bluebubble.png' else 2 \
             if image == 'redbubble.png' else 3
         self.rect = self.image.get_rect()
@@ -162,8 +175,9 @@ class Button:
         self.font, self.font_size = pygame.font.get_default_font(), 0
         self.width, self.height = 0, 0
         self.action = None
-        self.rect = False
+        self.draw_rect = False
         self.was_clicked = False
+        self.rect = pygame.rect.Rect(self.x, self.y, self.x + self.width, self.y + self.height)
 
     def set_text(self, text):
         self.text = text
@@ -176,14 +190,15 @@ class Button:
 
     def set_rect(self, x, y, width, height):
         self.x, self.y, self.width, self.height = x, y, width, height
+        self.rect = pygame.rect.Rect(self.x, self.y, self.x + self.width, self.y + self.height)
 
     def set_draw_rect(self, drawing):
-        self.rect = drawing
+        self.draw_rect = drawing
 
     def render(self):
         text = pygame.font.SysFont(self.font, self.font_size).render(
             self.text, False, 'white')
-        if self.rect:
+        if self.draw_rect:
             pygame.draw.rect(screen, (120, 160, 200), (self.x, self.y,
                                                        self.width, self.height))
         screen.blit(text, (self.x, self.y))
@@ -201,14 +216,14 @@ for i in range(9):
 
 
 def create_particles(position):
-    particle_count = 20
+    particle_count = 5
     numbers = range(-5, 6)
     for _ in range(particle_count):
         Particle(position, random.choice(numbers), random.choice(numbers))
 
 
 class Gun(pygame.sprite.Sprite):
-    def __init__(self, pos, rotate, rotate_right, reverse, name):
+    def __init__(self, pos, rotate, rotate_right, reverse, name, velocity):
         super().__init__(all_sprites, guns)
         image = load_image(random.choice(['blue.png', 'red.png', 'green.png']))
         self.color = 1 if image == load_image('blue.png') else 2 \
@@ -225,11 +240,12 @@ class Gun(pygame.sprite.Sprite):
         self.right = rotate_right
         self.reverse = reverse
         self.name = name
+        self.velocity = velocity
 
     def update(self):
         if self.rotating:
-            self.angle = (self.angle - 2) % 360 if self.right \
-                else (self.angle + 2) % 360
+            self.angle = (self.angle - self.velocity) % 360 if self.right \
+                else (self.angle + self.velocity) % 360
             self.rotate()
 
     def rotate(self):
@@ -377,16 +393,97 @@ def gun_collision(hits):
         hit.hit(hits[hit][0])
 
 
+def easy():
+    pass
+
+
 def settings():
     running = True
+    text_d = pygame.font.SysFont('impact', 50).render('Difficulty', False, (255, 255, 255))
+    text_v = pygame.font.SysFont('impact', 50).render('Velocity', False, (255, 255, 255))
+    text_p1 = pygame.font.SysFont('impact', 50).render('Player 1:', False, (255, 255, 255))
+    text_p2 = pygame.font.SysFont('impact', 50).render('Player 2:', False, (255, 255, 255))
+    name1 = pygame.draw.rect(screen, 'white', (200, 30, 400, 50))
+    name2 = pygame.draw.rect(screen, 'white', (700, 30, 400, 50))
+    name_1 = name_2 = ''
+    menu = Menu()
+    menuv = Menu()
+    menu.append_option("1", easy)  # CHANGE
+    menu.append_option('2', easy)
+    menu.append_option('3', easy)
+    menuv.append_option("1", easy)
+    menuv.append_option('2', easy)
+    menuv.append_option('3', easy)
+    changing_name1 = changing_name2 = False
+    current_menu = 0
+    btn = Button()
+    btn.set_text('GAME START')
+    btn.set_size(100)
+    btn.set_font('impact')
+    btn.set_draw_rect(False)
+    btn.set_rect(500, 600, 200, 100)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                create_particles(pygame.mouse.get_pos())
+                changing_name1 = changing_name2 = False
+                x, y = event.pos
+                x1, y1 = name1.x, name1.y
+                if x1 < x < x1 + name1.width and y1 < y < y1 + name1.height:
+                    changing_name1 = True
+                    changing_name2 = False
+                x1, y1 = name2.x, name2.y
+                if x1 < x < x1 + name2.width and y1 < y < y1 + name2.height:
+                    changing_name1 = False
+                    changing_name2 = True
+                if btn.rect.collidepoint(event.pos):
+                    with open('game_settings.csv', 'a', newline='') as file:
+                        writer = csv.writer(file, delimiter=';', quotechar='"',
+                                            quoting=csv.QUOTE_MINIMAL)
+                        dif = menu._current_options_index + 1
+                        vel = menuv._current_options_index + 1
+                        name_1 = name_1 if name_1 else 'Player 1'
+                        name_2 = name_2 if name_2 else 'Player 2'
+                        writer.writerow([dif, vel, name_1, name_2])
+                    return game()
+            if event.type == pygame.KEYDOWN:
+                if changing_name1:
+                    name_1 += event.unicode
+                elif changing_name2:
+                    name_2 += event.unicode
+                else:
+                    if event.key == pygame.K_a or event.key == pygame.K_LEFT or \
+                            event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                        current_menu = current_menu * -1 + 1 ** current_menu
+                    if event.key == pygame.K_w or event.key == pygame.K_UP:
+                        if not current_menu:
+                            menu.switch(-1)
+                        else:
+                            menuv.switch(-1)
+                    elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                        if not current_menu:
+                            menu.switch(+1)
+                        else:
+                            menuv.switch(+1)
         screen.fill('black')
+        btn.render()
+        pygame.draw.rect(screen, 'white', (200, 30, 400, 50), 1)
+        pygame.draw.rect(screen, 'white', (700, 30, 400, 50), 1)
+        all_sprites.draw(screen)
+        all_sprites.update()
+        menu.draw(screen, 300, 250, 75)
+        menuv.draw(screen, 700, 250, 75)
+        screen.blit(text_p1, (200, 30))
+        screen.blit(text_p2, (1000, 30))
+        screen.blit(pygame.font.SysFont('impact', 50).render(name_1, False, (255, 0, 0)), (200, 30))
+        screen.blit(pygame.font.SysFont('impact', 50).render(name_2, False, (0, 255, 0)), (700, 30))
+        screen.blit(text_d, (200, 130))
+        screen.blit(text_v, (1000, 130))
         clock.tick(FPS)
         pygame.display.flip()
-    game()
+
 
 def authors():
     pygame.display.set_caption('Authors')
@@ -460,44 +557,50 @@ Good luck!(Tap SPACE to continue)"""
 
     pygame.quit()
 
+
 def stat():
     pass
 
+
 def game():
+    with open('game_settings.csv') as file:
+        reader = csv.reader(file, delimiter=';', quotechar='"')
+        dif, vel, name1, name2 = list(reader)[-1]
+    dif, vel = DIFFICULTIES[dif], VELOCITIES[vel]
     running = True
     r, g, b = 0, 0, 0
-    for i in range(12):
-        for j in range(12):
-            Bubble((300 + i * 60, 0 + j * 60))
+    for i in range(12 * dif):
+        for j in range(12 * dif):
+            Bubble((300 + i * 60 // dif, 0 + j * 60 // dif), dif)
     Border(5, 5, WIDTH - 5, 5)
     Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
     Border(5, 5, 5, HEIGHT - 5)
     Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
-    gun1 = Gun((30, 300), True, True, False, 'Player 1')
-    gun2 = Gun((1200, 300), False, False, True, 'Player 2')
+    gun1 = Gun((30, 300), True, True, False, name1, vel)
+    gun2 = Gun((1200, 300), False, False, True, name2, vel)
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
                 # r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
-                create_particles(pygame.mouse.get_pos())
                 if gun1.rotating:
                     gun2.fire()
                 else:
                     gun1.fire()
-                for bubble in all_sprites:
-                    if bubble.__class__ == Bubble:
-                        bubble.update(event)
+                # for bubble in all_sprites:
+                #     if bubble.__class__ == Bubble:
+                #         bubble.update(event)
             if event.type == pygame.USEREVENT + 1:
                 for key in event.__dict__.keys():
                     gun, bullet = key, event.__dict__[key]
                 print(f'{gun.name} was hit by {bullet.name}')
                 gun.kill()
                 running = False
+                with open('game_score.csv', 'a', newline='') as file:
+                    writer = csv.writer(file, )
                 return gameover()
-                # send in some data for score
         screen.fill((r, g, b))
         hits = pygame.sprite.groupcollide(bubbles, bullets, False, False)
         gun_hit = pygame.sprite.groupcollide(guns, bullets, False, False)
@@ -507,7 +610,6 @@ def game():
         all_sprites.update()
         pygame.display.flip()
         clock.tick(FPS)
-    pygame.quit()
 
 
 def gameover():
