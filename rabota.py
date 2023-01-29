@@ -548,6 +548,7 @@ Good luck!(Tap SPACE to continue)"""
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                all_sprites.empty()
                 return start_screen()
         screen.fill((0, 0, 0))
         all_sprites.update()
