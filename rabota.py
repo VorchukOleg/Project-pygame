@@ -302,19 +302,9 @@ def collisions(hits):
 
 def start_screen():
     text = pygame.font.SysFont('impact', 100).render('Bubble Shooter', False, (255, 255, 255))
-    #start_btn = Button()
-    #start_btn.set_text('Начать')
-    #start_btn.set_font('impact')
-    #start_btn.set_rect(600, 200, 200, 80)
-    #start_btn.set_size(60)
-    #exit_btn = Button()
-    #exit_btn.set_text('Выйти')
-    #exit_btn.set_font('impact')
-    #exit_btn.set_rect(600, 300, 200, 80)
-    #exit_btn.set_size(60)
     menu = Menu()
-    menu.append_option("START", game)
-    menu.append_option('SETTINGS', settings)
+    menu.append_option("START", settings)
+    menu.append_option('STATISTICS', stat)
     menu.append_option('AUTHORS', authors)
     menu.append_option('RULES', rules)
     menu.append_option('QUIT', quit)
@@ -324,13 +314,6 @@ def start_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            #elif event.type == pygame.MOUSEBUTTONDOWN:
-                #start_btn.clicked(event.pos)
-                #if start_btn.was_clicked:
-                    #pygame.event.post(pygame.event.Event(pygame.QUIT))
-                #exit_btn.clicked(event.pos)
-                #if exit_btn.was_clicked:
-                    #pygame.event.post(pygame.event.Event(pygame.QUIT))
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w or event.key == pygame.K_UP:
                     menu.switch(-1)
@@ -339,8 +322,6 @@ def start_screen():
                 elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                     return menu._callbacks[menu._current_options_index]()
 
-        #start_btn.render()
-        #exit_btn.render()
         screen.fill((0, 0, 0))
         screen.blit(text, (300, 30))
 
@@ -355,13 +336,17 @@ def gun_collision(hits):
 
 
 def settings():
-    pass
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.fill('black')
+        clock.tick(FPS)
+        pygame.display.flip()
+    game()
 
 def authors():
-    #screen = pygame.display.set_mode((640, 480))
-    #text = pygame.font.Font(pygame.font.get_default_font(), 36).render('Bubble Shooter', True, (255, 255, 255))
-    #screen.blit(text, (300, 30))
-    screen_authors = pygame.display.set_mode(SIZE)
     pygame.display.set_caption('Authors')
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
@@ -393,6 +378,9 @@ def authors():
 
 
 def rules():
+    pass
+
+def stat():
     pass
 
 def game():
@@ -446,9 +434,17 @@ def gameover():
     text = pygame.font.SysFont('impact', 100).render('Bubble Shooter', False, (255, 255, 255))
     menu = Menu()
     menu.append_option("NEW GAME", game)
-    menu.append_option('SETTINGS', settings)
+    menu.append_option('MENU', start_screen)
+    menu.append_option('STATISTICS', stat)
     menu.append_option('QUIT', quit)
 
+    all_sprites.empty()
+    bullets.empty()
+    bubbles.empty()
+    horizontal_borders.empty()
+    vertical_borders.empty()
+    guns.empty()
+    explosions.empty()
     running = True
     while running:
         for event in pygame.event.get():
