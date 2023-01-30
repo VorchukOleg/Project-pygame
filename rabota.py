@@ -500,6 +500,8 @@ def stat():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return start_screen()
         screen.fill('black')
         for i, v in enumerate(table):
             screen.blit(v[0], (200, 100 + 50 * i))
