@@ -32,6 +32,7 @@ HITS = {1: {1: 2,
             2: 3,
             3: 2}
         }
+Local_Score = {}
 VELOCITIES = {
     '1': 1,
     '2': 2,
@@ -345,9 +346,10 @@ class Border(pygame.sprite.Sprite):
             self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
-def collisions(hits):
+def collisions(hits, score):
     for bubble, bullet in hits.items():
         bullet = bullet[0]
+        score[bullet.name]['hits'] = score[bullet.name].get('hits', 0) + 1
         dmg = HITS[bullet.color][bubble.color]
         hit = dmg if bullet.hp >= dmg else bullet.hp
         bullet.hp -= hit
@@ -561,9 +563,20 @@ Good luck!(Tap SPACE to continue)"""
 
     pygame.quit()
 
-
 def stat():
     pass
+
+def local_stat():
+    running = True
+    text1 = pygame.font.SysFont('comicsansms', 30).render(f'{Local_Score.keys()}', False, (255, 255, 255))
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+    screen.fill('black')
+    screen.blit(text1, (100, 100))
+    clock.tick(FPS)
+    pygame.display.flip()
 
 
 def game():
@@ -572,6 +585,7 @@ def game():
         dif, vel, name1, name2 = list(reader)[-1]
     dif, vel = DIFFICULTIES[dif], VELOCITIES[vel]
     running = True
+    score = {name1:{'Wins':0, 'Defeats': 0}, name2:{'Wins':0, 'Defeats': 0}}
     r, g, b = 0, 0, 0
     for i in range(12 * dif):
         for j in range(12 * dif):
@@ -591,8 +605,10 @@ def game():
                 # r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
                 if gun1.rotating:
                     gun2.fire()
+                    score[gun2.name]['Shots'] = score[gun2.name].get('Shots', 0) + 1
                 else:
                     gun1.fire()
+                    score[gun1.name]['Shots'] = score[gun1.name].get('Shots', 0) + 1
                 # for bubble in all_sprites:
                 #     if bubble.__class__ == Bubble:
                 #         bubble.update(event)
@@ -602,13 +618,24 @@ def game():
                 print(f'{gun.name} was hit by {bullet.name}')
                 gun.kill()
                 running = False
-                with open('game_score.csv', 'a', newline='') as file:
-                    writer = csv.writer(file, )
+                #with open('game_score.csv', 'a', newline='') as file:
+                    #writer = csv.writer(file, )
+                score[gun.name]['Wins'] = score[gun.name]['Wins'] + 1
+                Local_Score[gun.name]['hits'] = Local_Score.get(gun.name, {'Wins':0, 'Defeats': 0}).get('hits', 0) + score[gun.name]['hits']
+                Local_Score[gun.name]['Wins'] += score[gun.name]['Wins']
+                Local_Score[gun.name]['Defeats'] += score[gun.name]['Defeats']
+                Local_Score[gun.name]['Shots'] += score[gun.name]['Shots']
+                gun = name1 if gun.name != name1 else name2
+                score[gun]['Defeats'] = score[gun]['Defeats'] + 1
+                Local_Score[gun]['hits'] += score[gun]['hits']
+                Local_Score[gun]['Wins'] += score[gun]['Wins']
+                Local_Score[gun]['Defeats'] += score[gun]['Defeats']
+                Local_Score[gun]['Shots'] += score[gun]['Shots']
                 return gameover()
         screen.fill((r, g, b))
         hits = pygame.sprite.groupcollide(bubbles, bullets, False, False)
         gun_hit = pygame.sprite.groupcollide(guns, bullets, False, False)
-        collisions(hits)
+        collisions(hits, score)
         gun_collision(gun_hit)
         all_sprites.draw(screen)
         all_sprites.update()
@@ -621,7 +648,7 @@ def gameover():
     menu = Menu()
     menu.append_option("NEW GAME", game)
     menu.append_option('MENU', start_screen)
-    menu.append_option('STATISTICS', stat)
+    menu.append_option('STATISTICS', local_stat)
     menu.append_option('QUIT', quit)
 
     all_sprites.empty()
