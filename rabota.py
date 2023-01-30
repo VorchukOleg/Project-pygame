@@ -1,9 +1,11 @@
 import csv
 import random
 import os
+import sqlite3
 import pygame
 import sys
 from math import radians, sin, cos
+
 
 pygame.init()
 pygame.font.init()
