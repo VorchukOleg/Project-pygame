@@ -6,10 +6,9 @@ import pygame
 import sys
 from math import radians, sin, cos
 
-
 pygame.init()
 pygame.font.init()
-SIZE = WIDTH, HEIGHT = 1350, 730  # 610
+SIZE = WIDTH, HEIGHT = 1350, 730
 screen = pygame.display.set_mode(SIZE)
 all_sprites = pygame.sprite.Group()
 horizontal_borders = pygame.sprite.Group()
@@ -24,17 +23,23 @@ clock = pygame.time.Clock()
 FPS = 200
 screen_rect = (0, 0, WIDTH, HEIGHT)
 GRAVITY = 0.05
-HITS = {1: {1: 2,
-            2: 1,
-            3: 3},
-        2: {1: 3,
-            2: 2,
-            3: 1},
-        3: {1: 1,
-            2: 3,
-            3: 2}
-        }
-Local_Score = {}
+HITS = {
+    1: {
+        1: 2,
+        2: 1,
+        3: 3
+    },
+    2: {
+        1: 3,
+        2: 2,
+        3: 1
+    },
+    3: {
+        1: 1,
+        2: 3,
+        3: 2
+    }
+}
 VELOCITIES = {
     '1': 1,
     '2': 2,
@@ -70,15 +75,14 @@ class Menu:
         self._current_options_index = 0
 
     def append_option(self, option, callback):
-        self._option_surfaces.append(ARIAL_50.render(option, True, (255, 255, 255)))
+        self._option_surfaces.append(ARIAL_50.render(
+            option, True, (255, 255, 255)))
         self._callbacks.append(callback)
 
     def switch(self, direction):
-        self._current_options_index = max(0,
-                                          min(self._current_options_index + direction, len(self._option_surfaces) - 1))
-
-    def select(self):
-        pass
+        self._current_options_index = \
+            (self._current_options_index + direction) % len(
+                self._option_surfaces)
 
     def draw(self, surf, x, y, option_y_padding):
         for i, option in enumerate(self._option_surfaces):
@@ -110,7 +114,8 @@ class Cursor(pygame.sprite.Sprite):
         self.image.fill((0, 250, 0))
         self.text_height = 30
         self.text_width = 20
-        self.rect = self.image.get_rect(topleft=(self.text_width, self.text_height))
+        self.rect = self.image.get_rect(topleft=(
+            self.text_width, self.text_height))
         self.board = board
         self.text = ''
         self.cooldown = 0
@@ -131,6 +136,19 @@ class Cursor(pygame.sprite.Sprite):
 
         if self.cooldown:
             self.cooldown -= 1
+
+
+class Border(pygame.sprite.Sprite):
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(all_sprites)
+        if x1 == x2:
+            self.add(vertical_borders)
+            self.image = pygame.Surface([1, y2 - y1])
+            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
+        else:
+            self.add(horizontal_borders)
+            self.image = pygame.Surface([x2 - x1, 1])
+            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
 
 
 class Particle(pygame.sprite.Sprite):
@@ -159,8 +177,10 @@ class Particle(pygame.sprite.Sprite):
 class Bubble(pygame.sprite.Sprite):
     def __init__(self, pos, dif):
         super().__init__(all_sprites, bubbles)
-        image = random.choice(['bluebubble.png', 'redbubble.png', 'greenbubble.png'])
-        self.image = pygame.transform.scale(load_image(image), (70 // dif, 70 // dif))
+        image = random.choice(['bluebubble.png', 'redbubble.png',
+                               'greenbubble.png'])
+        self.image = pygame.transform.scale(load_image(image),
+                                            (70 // dif, 70 // dif))
         self.color = 1 if image == 'bluebubble.png' else 2 \
             if image == 'redbubble.png' else 3
         self.rect = self.image.get_rect()
@@ -180,7 +200,8 @@ class Button:
         self.action = None
         self.draw_rect = False
         self.was_clicked = False
-        self.rect = pygame.rect.Rect(self.x, self.y, self.x + self.width, self.y + self.height)
+        self.rect = pygame.rect.Rect(self.x, self.y,
+                                     self.x + self.width, self.y + self.height)
 
     def set_text(self, text):
         self.text = text
@@ -193,7 +214,8 @@ class Button:
 
     def set_rect(self, x, y, width, height):
         self.x, self.y, self.width, self.height = x, y, width, height
-        self.rect = pygame.rect.Rect(self.x, self.y, self.x + self.width, self.y + self.height)
+        self.rect = pygame.rect.Rect(self.x, self.y,
+                                     self.x + self.width, self.y + self.height)
 
     def set_draw_rect(self, drawing):
         self.draw_rect = drawing
@@ -210,6 +232,36 @@ class Button:
         if self.x <= pos[0] <= self.x + self.width:
             if self.y <= pos[1] <= self.y + self.height:
                 self.was_clicked = True
+
+
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center, gun, bullet):
+        super().__init__(explosions, all_sprites)
+        self.image = explosion_animation[0]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 50
+        self.gun = gun
+        self.bullet = bullet
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            if self.frame == len(explosion_animation):
+                self.kill()
+                pygame.time.delay(80)
+                event_type = pygame.USEREVENT + 1
+                pygame.event.post(pygame.event.Event(event_type,
+                                                     {self.gun: self.bullet}))
+            else:
+                center = self.rect.center
+                self.image = explosion_animation[self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
 
 
 explosion_animation = []
@@ -301,96 +353,20 @@ class Bullet(pygame.sprite.Sprite):
             self.image = pygame.Surface((6, 6), pygame.SRCALPHA, 32)
             pygame.draw.circle(self.image, pygame.Color('white'), (3, 3), 3)
 
-    def boom(self):
-        pass
-
-
-class Explosion(pygame.sprite.Sprite):
-    def __init__(self, center, gun, bullet):
-        super().__init__(explosions, all_sprites)
-        self.image = explosion_animation[0]
-        self.rect = self.image.get_rect()
-        self.rect.center = center
-        self.frame = 0
-        self.last_update = pygame.time.get_ticks()
-        self.frame_rate = 50
-        self.gun = gun
-        self.bullet = bullet
-
-    def update(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_update > self.frame_rate:
-            self.last_update = now
-            self.frame += 1
-            if self.frame == len(explosion_animation):
-                self.kill()
-                pygame.time.delay(30)
-                event_type = pygame.USEREVENT + 1
-                pygame.event.post(pygame.event.Event(event_type, {self.gun: self.bullet}))
-                # event.get() -> gun.kill() -> gama over -> score -> all_content()
-            else:
-                center = self.rect.center
-                self.image = explosion_animation[self.frame]
-                self.rect = self.image.get_rect()
-                self.rect.center = center
-
-
-class Border(pygame.sprite.Sprite):
-    def __init__(self, x1, y1, x2, y2):
-        super().__init__(all_sprites)
-        if x1 == x2:
-            self.add(vertical_borders)
-            self.image = pygame.Surface([1, y2 - y1])
-            self.rect = pygame.Rect(x1, y1, 1, y2 - y1)
-        else:
-            self.add(horizontal_borders)
-            self.image = pygame.Surface([x2 - x1, 1])
-            self.rect = pygame.Rect(x1, y1, x2 - x1, 1)
-
 
 def collisions(hits, score):
     for bubble, bullet in hits.items():
         bullet = bullet[0]
-        score[bullet.name]['hits'] = score[bullet.name].get('hits', 0) + 1
+        score[bullet.name]['Hits'] = score[bullet.name].get('Hits', 0) + 1
         dmg = HITS[bullet.color][bubble.color]
         hit = dmg if bullet.hp >= dmg else bullet.hp
         bullet.hp -= hit
         if bullet.hp > 0:
-            # pygame.sprite.groupcollide(bubbles, bullets, True, False)
-            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, False)
+            pygame.sprite.groupcollide(bubbles, bullets,
+                                       pygame.sprite.collide_circle, False)
         else:
-            # pygame.sprite.groupcollide(bubbles, bullets, True, True)
-            pygame.sprite.groupcollide(bubbles, bullets, pygame.sprite.collide_circle, True)
-
-
-def start_screen():
-    text = pygame.font.SysFont('comicsansms', 100).render('Bubble Shooter', False, (255, 255, 255))
-    menu = Menu()
-    menu.append_option("START", settings)
-    menu.append_option('STATISTICS', stat)
-    menu.append_option('AUTHORS', authors)
-    menu.append_option('RULES', rules)
-    menu.append_option('QUIT', quit)
-
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_w or event.key == pygame.K_UP:
-                    menu.switch(-1)
-                elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
-                    menu.switch(+1)
-                elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
-                    return menu._callbacks[menu._current_options_index]()
-
-        screen.fill((0, 0, 0))
-        screen.blit(text, (300, 30))
-
-        menu.draw(screen, 300, 250, 75)
-        pygame.display.flip()
-        clock.tick(FPS)
+            pygame.sprite.groupcollide(bubbles, bullets,
+                                       pygame.sprite.collide_circle, True)
 
 
 def gun_collision(hits):
@@ -402,18 +378,158 @@ def easy():
     pass
 
 
+def start_screen():
+    text = pygame.font.SysFont('comicsansms', 100).render(
+        'Bubble Shooter', False, (255, 255, 255))
+    menu = Menu()
+    menu.append_option("START", settings)
+    menu.append_option('STATISTICS', stat)
+    menu.append_option('AUTHORS', authors)
+    menu.append_option('RULES', rules)
+    menu.append_option('QUIT', quit)
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w or event.key == pygame.K_UP:
+                    menu.switch(-1)
+                elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                    menu.switch(+1)
+                elif event.key == pygame.K_SPACE or \
+                        event.key == pygame.K_RETURN:
+                    return menu._callbacks[menu._current_options_index]()
+        screen.fill((0, 0, 0))
+        screen.blit(text, (300, 30))
+        menu.draw(screen, 300, 250, 75)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def authors():
+    pygame.display.set_caption('Authors')
+    x1 = x3 = 300
+    x2 = 500
+    font = pygame.font.SysFont('comicsansms', 32)
+    text_o = font.render("VORCHUK OLEG", 1, 'red', 'green')
+    text_k = font.render("KOMOV KIRILL", 1, 'red', 'green')
+    text_i = font.render("ZELENOV IGOR", 1, 'red', 'green')
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                return start_screen()
+        screen.fill((0, 0, 0))
+        screen.blit(text_o, (x1 - 100, 300))
+        screen.blit(text_k, (x2 - 200, 350))
+        screen.blit(text_i, (x3 - 100, 400))
+        clock.tick(FPS)
+        pygame.display.flip()
+        x1 = (x1 - 2) % WIDTH
+        x2 = (x2 + 2) % WIDTH
+        x3 = (x3 - 2) % WIDTH
+    pygame.quit()
+
+
+def rules():
+    pygame.display.set_caption('Rules')
+    board = Board()
+    cursor = Cursor(board)
+    all_sprites.add(cursor, board)
+    text = """
+Welcome!
+
+In this game you have a gun, lots of annoying bubbles
+and an opponent who wants to shoot you! Do it first!
+
+1) Use the WASD buttons or ARROWS
+to switch in the game menu and settings.
+
+2) In the settings write your name,
+choose gun's speed rotation
+and the difficulty level.
+
+3) Guns shoot in turns, click the SPACE button to shoot.
+
+Good luck! (Tap SPACE to continue)"""
+    running = True
+    cursor.write(text)
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                all_sprites.empty()
+                return start_screen()
+        screen.fill((0, 0, 0))
+        all_sprites.update()
+        all_sprites.draw(screen)
+        clock.tick(FPS)
+        pygame.display.flip()
+    pygame.quit()
+
+
+def stat():
+    con = sqlite3.connect('overall_stats.sqlite')
+    cur = con.cursor()
+    cur.execute('create table if not exists player_stats ('
+                'Player string primary key,'
+                'Hits integer,'
+                'Wins integer,'
+                'Games_count integer)')
+    values = list(cur.execute('select * from player_stats').fetchall())[::-1][:10]
+    font = pygame.font.SysFont('comicsansms', 30)
+    table = []
+    name_text = font.render('Player', False, 'white')
+    hits_text = font.render('Hits', False, 'white')
+    wins_text = font.render('Wins', False, 'white')
+    count_text = font.render('Games count', False, 'white')
+    for i in range(len(values)):
+        vs = list(values[i])
+        name = font.render(vs[0], False, 'white')
+        hits = font.render(str(vs[1]), False, 'white')
+        wins = font.render(str(vs[2]), False, 'white')
+        count = font.render(str(vs[3]), False, 'white')
+        table.append([name, hits, wins, count])
+    con.close()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        screen.fill('black')
+        for i, v in enumerate(table):
+            screen.blit(v[0], (200, 100 + 50 * i))
+            screen.blit(v[1], (610, 100 + 50 * i))
+            screen.blit(v[2], (825, 100 + 50 * i))
+            screen.blit(v[3], (1100, 100 + 50 * i))
+        screen.blit(name_text, (200, 30))
+        screen.blit(hits_text, (600, 30))
+        screen.blit(wins_text, (800, 30))
+        screen.blit(count_text, (1000, 30))
+        clock.tick(FPS)
+        pygame.display.flip()
+
+
 def settings():
     running = True
-    text_d = pygame.font.SysFont('Times New Roman', 50).render('Difficulty', False, (255, 255, 255))
-    text_v = pygame.font.SysFont('Times New Roman', 50).render('Velocity', False, (255, 255, 255))
-    text_p1 = pygame.font.SysFont('Times New Roman', 40).render('Player 1:', False, (255, 255, 255))
-    text_p2 = pygame.font.SysFont('Times New Roman', 40).render('Player 2:', False, (255, 255, 255))
+    text_d = pygame.font.SysFont('Times New Roman', 50).render(
+        'Difficulty', False, (255, 255, 255))
+    text_v = pygame.font.SysFont('Times New Roman', 50).render(
+        'Velocity', False, (255, 255, 255))
+    text_p1 = pygame.font.SysFont('Times New Roman', 40).render(
+        'Player 1:', False, (255, 255, 255))
+    text_p2 = pygame.font.SysFont('Times New Roman', 40).render(
+        'Player 2:', False, (255, 255, 255))
     name1 = pygame.draw.rect(screen, 'white', (190, 30, 400, 50))
     name2 = pygame.draw.rect(screen, 'white', (800, 30, 400, 50))
     name_1 = name_2 = ''
     menu = Menu()
     menuv = Menu()
-    menu.append_option("beginner", easy)  # CHANGE
+    menu.append_option("beginner", easy)
     menu.append_option('normal', easy)
     menu.append_option('expert', easy)
     menuv.append_option("low", easy)
@@ -427,6 +543,7 @@ def settings():
     btn.set_font('comicsansms')
     btn.set_draw_rect(False)
     btn.set_rect(300, 550, 200, 100)
+    finished = False
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -451,8 +568,8 @@ def settings():
                         vel = menuv._current_options_index + 1
                         name_1 = name_1 if name_1 else 'Player 1'
                         name_2 = name_2 if name_2 else 'Player 2'
+                        finished = True
                         writer.writerow([dif, vel, name_1, name_2])
-                    return game()
             if event.type == pygame.KEYDOWN:
                 if changing_name1:
                     name_1 += event.unicode
@@ -472,6 +589,9 @@ def settings():
                             menu.switch(+1)
                         else:
                             menuv.switch(+1)
+        if finished and not any(
+                x for x in all_sprites if x.__class__ == Particle):
+            return game()
         screen.fill('black')
         btn.render()
         pygame.draw.rect(screen, 'white', (200, 30, 400, 50), 1)
@@ -482,112 +602,38 @@ def settings():
         menuv.draw(screen, 800, 250, 75)
         screen.blit(text_p1, (50, 30))
         screen.blit(text_p2, (650, 30))
-        screen.blit(pygame.font.SysFont('monospace', 50).render(name_1, False, (255, 0, 0)), (200, 30))
-        screen.blit(pygame.font.SysFont('monospace', 50).render(name_2, False, (0, 255, 0)), (800, 30))
+        screen.blit(pygame.font.SysFont('monospace', 50).render(
+            name_1, False, (255, 0, 0)), (203, 30))
+        screen.blit(pygame.font.SysFont('monospace', 50).render(
+            name_2, False, (0, 255, 0)), (800, 30))
         screen.blit(text_d, (200, 130))
         screen.blit(text_v, (800, 130))
         clock.tick(FPS)
         pygame.display.flip()
 
 
-def authors():
-    pygame.display.set_caption('Authors')
-    RED = (255, 0, 0)
-    GREEN = (0, 255, 0)
-    BLUE = (0, 0, 255)
-
-    x1 = x2 = x3 = 300
-    font = pygame.font.SysFont('comicsansms', 32)
-    text_O = font.render("VORCHUK OLEG", 1, RED, GREEN)
-    text_K = font.render("KOMOV KIRILL", 1, RED, GREEN)
-    text_I = font.render("ZELENOV IGOR", 1, RED, GREEN)
-
-    running = True
-    while running:
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                return start_screen()
-        screen.fill((0, 0, 0))
-        screen.blit(text_O, (x1, 300))
-        screen.blit(text_K, (x2, 350))
-        screen.blit(text_I, (x3, 400))
-        clock.tick(FPS)
-        pygame.display.flip()
-        x1 = (x1 - 2) % WIDTH
-        x2 = (x2 + 2) % WIDTH
-        x3 = (x3 - 2) % WIDTH
-
-    pygame.quit()
-
-
-def rules():
-    pygame.display.set_caption('Rules')
-
-    font = pygame.font.SysFont('comicsansms', 30)
-    font0 = pygame.font.SysFont('comicsansms', 50)
-    board = Board()
-    cursor = Cursor(board)
-    all_sprites.add(cursor, board)
-    text = """
-Welcome!
-
-In this game you have your own gun, lots of annoying bubbles
-and an opponent who wants to shoot you! Do it first!
-
-1) Use the WASD buttons or ARROWS
-to switch in the game menu and settings.
-
-2) In the settings, you write your name,
-choose the speed of your gun
-and the difficulty level.
-
-3) Guns shoot in turn, click the SPASE button to shoot.
-
-Good luck!(Tap SPACE to continue)"""
-    running = True
-    cursor.write(text)
-    while running:
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                all_sprites.empty()
-                return start_screen()
-        screen.fill((0, 0, 0))
-        all_sprites.update()
-        all_sprites.draw(screen)
-        clock.tick(FPS)
-        pygame.display.flip()
-
-    pygame.quit()
-
-def stat():
-    pass
-
-def local_stat():
-    running = True
-    text1 = pygame.font.SysFont('comicsansms', 30).render(f'{Local_Score.keys()}', False, (255, 255, 255))
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-    screen.fill('black')
-    screen.blit(text1, (100, 100))
-    clock.tick(FPS)
-    pygame.display.flip()
-
-
-def game():
+def game(last_score={}):
     with open('game_settings.csv') as file:
         reader = csv.reader(file, delimiter=';', quotechar='"')
         dif, vel, name1, name2 = list(reader)[-1]
     dif, vel = DIFFICULTIES[dif], VELOCITIES[vel]
     running = True
-    score = {name1:{'Wins':0, 'Defeats': 0}, name2:{'Wins':0, 'Defeats': 0}}
+    score = {
+        name1:
+            {
+                'Wins': 0,
+                'Defeats': 0,
+                'Count': 0
+            },
+        name2:
+            {
+                'Wins': 0,
+                'Defeats': 0
+            }
+    }
+    for player in last_score.keys():
+        for item in last_score[player].keys():
+            score[player][item] = last_score[player][item]
     r, g, b = 0, 0, 0
     for i in range(12 * dif):
         for j in range(12 * dif):
@@ -598,42 +644,34 @@ def game():
     Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
     gun1 = Gun((30, 300), True, True, False, name1, vel)
     gun2 = Gun((1200, 300), False, False, True, name2, vel)
+    shots1 = shots2 = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 gun1.rotating, gun2.rotating = gun2.rotating, gun1.rotating
-                # r, g, b = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
                 if gun1.rotating:
                     gun2.fire()
-                    score[gun2.name]['Shots'] = score[gun2.name].get('Shots', 0) + 1
+                    shots2 += 1
                 else:
                     gun1.fire()
-                    score[gun1.name]['Shots'] = score[gun1.name].get('Shots', 0) + 1
-                # for bubble in all_sprites:
-                #     if bubble.__class__ == Bubble:
-                #         bubble.update(event)
+                    shots1 += 1
             if event.type == pygame.USEREVENT + 1:
                 for key in event.__dict__.keys():
                     gun, bullet = key, event.__dict__[key]
-                print(f'{gun.name} was hit by {bullet.name}')
                 gun.kill()
                 running = False
-                #with open('game_score.csv', 'a', newline='') as file:
-                    #writer = csv.writer(file, )
-                score[gun.name]['Wins'] = score[gun.name]['Wins'] + 1
-                Local_Score[gun.name]['hits'] = Local_Score.get(gun.name, {'Wins':0, 'Defeats': 0}).get('hits', 0) + score[gun.name]['hits']
-                Local_Score[gun.name]['Wins'] += score[gun.name]['Wins']
-                Local_Score[gun.name]['Defeats'] += score[gun.name]['Defeats']
-                Local_Score[gun.name]['Shots'] += score[gun.name]['Shots']
-                gun = name1 if gun.name != name1 else name2
-                score[gun]['Defeats'] = score[gun]['Defeats'] + 1
-                Local_Score[gun]['hits'] += score[gun]['hits']
-                Local_Score[gun]['Wins'] += score[gun]['Wins']
-                Local_Score[gun]['Defeats'] += score[gun]['Defeats']
-                Local_Score[gun]['Shots'] += score[gun]['Shots']
-                return gameover()
+                score[bullet.name]['Wins'] = score[bullet.name]['Wins'] + 1
+                score[gun.name]['Defeats'] = score[gun.name]['Defeats'] + 1
+                shots = shots1 if bullet.name == gun1.name else shots2
+                hits = (score[name1]['Hits'] - last_score.get(
+                        name1, {}).get('Hits', 0),
+                        score[name2]['Hits'] - last_score.get(
+                        name2, {}).get('Hits', 0))
+                winner = bullet.name
+                score[name1]['Count'] += 1
+                return gameover(score, shots, hits, winner)
         screen.fill((r, g, b))
         hits = pygame.sprite.groupcollide(bubbles, bullets, False, False)
         gun_hit = pygame.sprite.groupcollide(guns, bullets, False, False)
@@ -645,14 +683,15 @@ def game():
         clock.tick(FPS)
 
 
-def gameover():
-    text = pygame.font.SysFont('comicsansms', 100).render('Bubble Shooter', False, (255, 255, 255))
+def gameover(score, shots, hits, winner):
+    text = pygame.font.SysFont('comicsansms', 100).render(
+        'Bubble Shooter', False, (255, 255, 255))
     menu = Menu()
-    menu.append_option("NEW GAME", game)
-    menu.append_option('MENU', start_screen)
-    menu.append_option('STATISTICS', local_stat)
-    menu.append_option('QUIT', quit)
-
+    menu.append_option("NEW GAME", lambda: game(score))
+    menu.append_option('MENU', lambda: new_game(True, score))
+    menu.append_option('STATISTICS', lambda: local_stat(
+        score, shots, hits, winner))
+    menu.append_option('QUIT', lambda: new_game(False, score))
     all_sprites.empty()
     bullets.empty()
     bubbles.empty()
@@ -670,14 +709,100 @@ def gameover():
                     menu.switch(-1)
                 elif event.key == pygame.K_s or event.key == pygame.K_DOWN:
                     menu.switch(+1)
-                elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                elif event.key == pygame.K_SPACE or \
+                        event.key == pygame.K_RETURN:
                     return menu._callbacks[menu._current_options_index]()
         screen.fill((0, 0, 0))
         screen.blit(text, (300, 30))
-
         menu.draw(screen, 300, 250, 75)
         pygame.display.flip()
         clock.tick(FPS)
+
+
+def new_game(yes, score):
+    con = sqlite3.connect('overall_stats.sqlite')
+    cur = con.cursor()
+    cur.execute('create table if not exists player_stats ('
+                'Player string primary key,'
+                'Hits integer,'
+                'Wins integer,'
+                'Games_count integer)')
+    for pl in score.keys():
+        if score[pl].get('Count', 0):
+            count = score[pl]['Count']
+    players = [x[0] for x in cur.execute('select Player from player_stats').fetchall()]
+    for player in score.keys():
+        if player in players:
+            info = cur.execute(f'select * from player_stats where Player = '
+                               f'"{player}"').fetchone()
+            print(info)
+            cur.execute(f'update player_stats set Hits = '
+                        f'{info[1] + score[player]["Hits"]} where Player = "{player}"')
+            cur.execute(f'update player_stats set Wins = '
+                        f'{info[2] + score[player]["Wins"]} where Player = "{player}"')
+            cur.execute(f'update player_stats set Games_count = '
+                        f'{info[3] + count} where Player = "{player}"')
+        else:
+            cur.execute('insert into player_stats values(?, ?, ?, ?)',
+                        (player, score[player]['Hits'],
+                         score[player]['Wins'], count))
+    con.commit()
+    con.close()
+    if yes:
+        return start_screen()
+
+
+def local_stat(score, shots, all_hits, winner):
+    running = True
+    font = pygame.font.SysFont('comicsansms', 30)
+    name1, name2 = score.keys()
+    text1 = font.render(name1, False, (255, 255, 255))
+    text2 = font.render(name2, False, 'white')
+    wins1 = font.render(str(score[name1]['Wins']), False, 'white')
+    wins2 = font.render(str(score[name2]['Wins']), False, 'white')
+    current_hits1 = font.render(str(all_hits[0]), False, 'white')
+    current_hits2 = font.render(str(all_hits[1]), False, 'white')
+    hits1 = font.render(str(score[name1]['Hits']), False, 'white')
+    hits2 = font.render(str(score[name2]['Hits']), False, 'white')
+    text = font.render('Players', False, 'white')
+    wins = font.render('Wins', False, 'white')
+    hits = font.render('Hits', False, 'white')
+    hits_text = font.render('Current Hits', False, 'white')
+    stats = pygame.font.SysFont('comicsansms', 50).render('Stats', False, 'white')
+    current_winner_text = font.render('Winner', False, 'white')
+    current_shots_text = font.render("Winner's shots", False, 'white')
+    current_shots = font.render(str(shots), False, 'white')
+    current_winner = font.render(winner, False, 'white')
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return gameover(score, shots, all_hits, winner)
+        screen.fill('black')
+        pygame.draw.line(screen, 'white', (350, 30), (350, 500))
+        pygame.draw.line(screen, 'white', (50, 100), (WIDTH - 100, 100))
+        pygame.draw.line(screen, 'white', (50, 370), (WIDTH - 100, 370))
+        screen.blit(text1, (500, 150))
+        screen.blit(text2, (900, 150))
+        screen.blit(wins1, (500, 200))
+        screen.blit(wins2, (900, 200))
+        screen.blit(current_hits1, (500, 250))
+        screen.blit(current_hits2, (900, 250))
+        screen.blit(hits1, (500, 300))
+        screen.blit(hits2, (900, 300))
+        screen.blit(text, (100, 150))
+        screen.blit(wins, (100, 200))
+        screen.blit(hits, (100, 300))
+        screen.blit(stats, (700, 30))
+        screen.blit(current_winner, (700, 400))
+        screen.blit(current_shots, (750, 450))
+        screen.blit(hits_text, (100, 250))
+        screen.blit(current_winner_text, (100, 400))
+        screen.blit(current_shots_text, (100, 450))
+        clock.tick(FPS)
+        pygame.display.flip()
 
 
 def all_content():
