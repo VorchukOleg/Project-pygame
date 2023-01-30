@@ -321,6 +321,7 @@ class Explosion(pygame.sprite.Sprite):
             self.frame += 1
             if self.frame == len(explosion_animation):
                 self.kill()
+                pygame.time.delay(30)
                 event_type = pygame.USEREVENT + 1
                 pygame.event.post(pygame.event.Event(event_type, {self.gun: self.bullet}))
                 # event.get() -> gun.kill() -> gama over -> score -> all_content()
