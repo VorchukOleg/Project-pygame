@@ -333,7 +333,7 @@ class Bullet(pygame.sprite.Sprite):
         if reverse:
             self.vx = -self.vx
         self.vy = 10 * sin(radians(angle))
-        self.hp = 10
+        self.hp = 15
         self.name = name
 
     def update(self):
