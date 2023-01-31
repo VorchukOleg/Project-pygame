@@ -409,7 +409,7 @@ def start_screen():
 
 def authors():
     pygame.display.set_caption('Authors')
-    x1 = x3 = 300
+    x1 = x3 = 500
     x2 = 500
     font = pygame.font.SysFont('comicsansms', 32)
     text_o = font.render("VORCHUK OLEG", 1, 'red', 'green')
@@ -423,14 +423,14 @@ def authors():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 return start_screen()
         screen.fill((0, 0, 0))
-        screen.blit(text_o, (x1 - 100, 300))
-        screen.blit(text_k, (x2 - 200, 350))
-        screen.blit(text_i, (x3 - 100, 400))
+        screen.blit(text_o, (x1 - 300, 300))
+        screen.blit(text_k, (x2 - 300, 350))
+        screen.blit(text_i, (x3 - 300, 400))
         clock.tick(FPS)
         pygame.display.flip()
-        x1 = (x1 - 2) % WIDTH
-        x2 = (x2 + 2) % WIDTH
-        x3 = (x3 - 2) % WIDTH
+        x1 = (x1 - 2) % (WIDTH + 300)
+        x2 = (x2 + 2) % (WIDTH + 300)
+        x3 = (x3 - 2) % (WIDTH + 300)
     pygame.quit()
 
 
@@ -512,6 +512,7 @@ def stat():
         screen.blit(hits_text, (600, 30))
         screen.blit(wins_text, (800, 30))
         screen.blit(count_text, (1000, 30))
+        pygame.draw.line(screen, 'white', (50, 90), (WIDTH - 50, 90))
         clock.tick(FPS)
         pygame.display.flip()
 
