@@ -489,7 +489,7 @@ def stat():
     count_text = font.render('Games count', False, 'white')
     for i in range(len(values)):
         vs = list(values[i])
-        name = font.render(vs[0], False, 'white')
+        name = font.render(str(vs[0]), False, 'white')
         hits = font.render(str(vs[1]), False, 'white')
         wins = font.render(str(vs[2]), False, 'white')
         count = font.render(str(vs[3]), False, 'white')
